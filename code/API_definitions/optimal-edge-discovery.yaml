@@ -264,24 +264,10 @@ paths:
           $ref: "#/components/responses/Generic403"
         "404":
           $ref: "#/components/responses/Generic404"
-        "405":
-          $ref: "#/components/responses/Generic405"
-        "406":
-          $ref: "#/components/responses/Generic406"
         "422":
           $ref: "#/components/responses/Generic422"
         "429":
           $ref: "#/components/responses/Generic429"
-        "500":
-          $ref: "#/components/responses/Generic500"
-        "501":
-          $ref: "#/components/responses/Generic501"
-        "502":
-          $ref: "#/components/responses/Generic502"
-        "503":
-          $ref: "#/components/responses/Generic503"
-        "504":
-          $ref: "#/components/responses/Generic504"
       tags:
         - Regions
       description: |
@@ -301,6 +287,15 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/OptimalEdgeDiscoveryInfo"
+            examples:
+              Identify Device By 3-Legged Access Token:
+                $ref: '#/components/examples/IdentifyDeviceBy3LeggedToken'
+              Identify Device By Phone Number:
+                $ref: '#/components/examples/IdentifyDeviceByPhoneNumber'
+              Identify Device By IP Address:
+                $ref: '#/components/examples/IdentifyDeviceByIPAddress'
+              Identify Device By Multiple Identifiers:
+                $ref: '#/components/examples/IdentifyDeviceByMultipleIdentifiers'
 
       responses:
         "200":
@@ -315,7 +310,7 @@ paths:
                 title: EdgeCloudZonesResponse
                 type: array
                 items:
-                  $ref: "#/components/schemas/ResourcesEdgeCloudZones"
+                  $ref: "#/components/schemas/EdgeCloudZone"
         "400":
           $ref: "#/components/responses/Generic400"
         "401":
@@ -324,24 +319,10 @@ paths:
           $ref: "#/components/responses/Generic403"
         "404":
           $ref: "#/components/responses/Generic404"
-        "405":
-          $ref: "#/components/responses/Generic405"
-        "406":
-          $ref: "#/components/responses/Generic406"
         "422":
           $ref: "#/components/responses/Generic422"
         "429":
           $ref: "#/components/responses/Generic429"
-        "500":
-          $ref: "#/components/responses/Generic500"
-        "501":
-          $ref: "#/components/responses/Generic501"
-        "502":
-          $ref: "#/components/responses/Generic502"
-        "503":
-          $ref: "#/components/responses/Generic503"
-        "504":
-          $ref: "#/components/responses/Generic504"
       tags:
         - Discovery
       summary: Discover optimal edge cloud zones for deployed applications
@@ -371,10 +352,8 @@ components:
         pattern: ^[a-zA-Z0-9-_:;.\/<>{}]{0,256}$
         example: "b4333c46-49c0-4f62-80d7-f0ef930f1c46"
 
-
   schemas:
-
-    ResourcesEdgeCloudZones:
+    EdgeCloudZone:
       type: object
       description: Edge cloud zone information for the
         given application profile and device information
@@ -387,6 +366,10 @@ components:
           $ref: "#/components/schemas/EdgeCloudProvider"
         edgeCloudRegion:
           $ref: "#/components/schemas/EdgeCloudRegion"
+        applicationProfileId:
+          $ref: "#/components/schemas/ApplicationProfileId"
+        device:
+          $ref: "#/components/schemas/DeviceResponse"
         status:
           description: Status of the Edge cloud zone (default is 'unknown')
           type: string
@@ -395,7 +378,10 @@ components:
             - inactive
             - unknown
           default: unknown
-      additionalProperties: false
+      required:
+        - edgeCloudZoneId
+        - edgeCloudZoneName
+        - edgeCloudProvider
 
     EdgeCloudRegions:
       type: object
@@ -470,6 +456,27 @@ components:
           $ref: "#/components/schemas/EdgeCloudRegion"
       required:
         - applicationProfileId
+
+
+    DeviceResponse:
+      description: |
+        An identifier for the end-user equipment able to connect to the network
+        that the response refers to. This parameter is only returned when the
+        API consumer includes the `device` parameter in their request (i.e.
+        they are using a two-legged access token), and is relevant when more
+        than one device identifier is specified, as only one of those device
+        identifiers is allowed in the response.
+        If the API consumer provides more than one device identifier in their
+        request, the API provider must return a single identifier which is the
+        one they are using to fulfil the request, even if the identifiers do not
+        match the same device. API provider does not perform any logic to
+        validate/correlate that the indicated device identifiers match the same
+        device. No error should be returned if the identifiers are otherwise
+        valid to prevent API consumers correlating different identifiers
+        with a given end user.
+      allOf:
+        - $ref: "#/components/schemas/Device"
+        - maxProperties: 1
 
     Device:
       description: |
@@ -596,7 +603,6 @@ components:
                     enum:
                       - INVALID_ARGUMENT
                       - OUT_OF_RANGE
-                      - "{{SPECIFIC_CODE}}"
           examples:
             GENERIC_400_INVALID_ARGUMENT:
               description: Invalid Argument. Generic Syntax Exception
@@ -633,7 +639,8 @@ components:
                       - UNAUTHENTICATED
           examples:
             GENERIC_401_UNAUTHENTICATED:
-              description: Request cannot be authenticated and a new authentication is required
+              description: Request cannot be authenticated and a new
+                authentication is required
               value:
                 status: 401
                 code: UNAUTHENTICATED
@@ -693,7 +700,6 @@ components:
                     enum:
                       - NOT_FOUND
                       - IDENTIFIER_NOT_FOUND
-                      - "{{SPECIFIC_CODE}}"
           examples:
             GENERIC_404_NOT_FOUND:
               description: Resource is not found
@@ -707,59 +713,6 @@ components:
                 status: 404
                 code: IDENTIFIER_NOT_FOUND
                 message: Device identifier not found.
-    Generic405:
-      description: Method Not Allowed
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 405
-                  code:
-                    enum:
-                      - METHOD_NOT_ALLOWED
-          examples:
-            GENERIC_405_METHOD_NOT_ALLOWED:
-              description: Invalid HTTP verb used with a given endpoint
-              value:
-                status: 405
-                code: METHOD_NOT_ALLOWED
-                message: The requested method is not allowed/supported on the
-                  target resource.
-    Generic406:
-      description: Not Acceptable
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 406
-                  code:
-                    enum:
-                      - NOT_ACCEPTABLE
-          examples:
-            GENERIC_406_NOT_ACCEPTABLE:
-              description: API Server does not accept the media type
-                (`Accept-*` header) indicated by API client
-              value:
-                status: 406
-                code: NOT_ACCEPTABLE
-                message: The server cannot produce a response matching the
-                  content requested by the client through `Accept-*` headers.
     Generic422:
       description: Unprocessable Content
       headers:
@@ -852,132 +805,35 @@ components:
                 status: 429
                 code: TOO_MANY_REQUESTS
                 message: Rate limit reached.
-    Generic500:
-      description: Internal Server Error
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 500
-                  code:
-                    enum:
-                      - INTERNAL
-          examples:
-            GENERIC_500_INTERNAL:
-              description: Problem in Server side. Regular Server Exception
-              value:
-                status: 500
-                code: INTERNAL
-                message: Unknown server error. Typically a server bug.
-    Generic501:
-      description: Not Implemented
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 501
-                  code:
-                    enum:
-                      - NOT_IMPLEMENTED
-          examples:
-            GENERIC_501_NOT_IMPLEMENTED:
-              description: Service not implemented. The use of this code should
-                be avoided as far as possible to get the objective to reach
-                aligned implementations
-              value:
-                status: 501
-                code: NOT_IMPLEMENTED
-                message: This functionality is not implemented yet.
-    Generic502:
-      description: Bad Gateway
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 502
-                  code:
-                    enum:
-                      - BAD_GATEWAY
-          examples:
-            GENERIC_502_BAD_GATEWAY:
-              description: Internal routing problem in the Server side that
-                blocks to manage the service properly
-              value:
-                status: 502
-                code: BAD_GATEWAY
-                message: An upstream internal service cannot be reached.
-    Generic503:
-      description: Service Unavailable
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 503
-                  code:
-                    enum:
-                      - UNAVAILABLE
-          examples:
-            GENERIC_503_UNAVAILABLE:
-              description: Service is not available. Temporary situation
-                usually related to maintenance process in the server side
-              value:
-                status: 503
-                code: UNAVAILABLE
-                message: Service Unavailable.
-    Generic504:
-      description: Gateway Timeout
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 504
-                  code:
-                    enum:
-                      - TIMEOUT
-          examples:
-            GENERIC_504_TIMEOUT:
-              description: API Server Timeout
-              value:
-                status: 504
-                code: TIMEOUT
-                message: Request timeout exceeded.
+  examples:
+    IdentifyDeviceBy3LeggedToken:
+      description: Empty JSON when device is identified by access token
+      value:
+        applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
+
+    IdentifyDeviceByPhoneNumber:
+      description: Identifying device by phone number
+      value:
+        applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
+        device:
+          phoneNumber: "+123456789"
+
+    IdentifyDeviceByIPAddress:
+      description: Identifying device by IP address
+      value:
+        applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
+        device:
+          ipv4Address:
+            publicAddress: "84.125.93.10"
+            publicPort: 59765
+
+    IdentifyDeviceByMultipleIdentifiers:
+      description: Identifying device by multiple device identifiers
+      value:
+        applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
+        device:
+          phoneNumber: "+123456789"
+          ipv4Address:
+            publicAddress: "84.125.93.10"
+            publicPort: 59765
+          networkAccessIdentifier: "123456789@domain.com"
