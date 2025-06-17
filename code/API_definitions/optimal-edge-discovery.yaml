@@ -248,7 +248,7 @@ paths:
       operationId: get-regions
       security:
         - openId:
-          - "optimal-edge-discovery:regions:read"
+            - "optimal-edge-discovery:regions:read"
       parameters:
         - $ref: "#/components/parameters/x-correlator"
       responses:
@@ -283,7 +283,7 @@ paths:
       operationId: get-edgeCloudZone
       security:
         - openId:
-          - "optimal-edge-discovery:edge-zones:read"
+            - "optimal-edge-discovery:edge-zones:read"
       parameters:
         - $ref: "#/components/parameters/x-correlator"
       requestBody:
