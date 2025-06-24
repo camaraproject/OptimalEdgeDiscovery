@@ -5,7 +5,7 @@ openapi: 3.0.3
 ############################################################################
 info:
   title: Optimal Edge Discovery API
-  version: wip
+  version: 0.1.0-rc.1
   x-camara-commonalities: 0.6
   contact:
     email: sp-edc@lists.camaraproject.org
@@ -212,13 +212,13 @@ info:
     url: "https://www.apache.org/licenses/LICENSE-2.0.html"
 externalDocs:
   description: Project documentation at Camara
-  url: https://github.com/camaraproject/EdgeCloud
+  url: https://github.com/camaraproject/OptimalEdgeDiscovery
 
 ############################################################################
 #                                     Servers                              #
 ############################################################################
 servers:
-  - url: "{apiRoot}/optimal-edge-discovery/vwip"
+  - url: "{apiRoot}/optimal-edge-discovery/v0rc1"
     variables:
       apiRoot:
         default: https://localhost:9091
