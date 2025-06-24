@@ -1,4 +1,4 @@
-@Optimal_Edge_Discovery
+  @Optimal_Edge_Discovery
 Feature: CAMARA Optimal Edge Discovery API, vwip - Operations for discovering optimal edge cloud zones
 
 # Input to be provided by the implementation to the tests

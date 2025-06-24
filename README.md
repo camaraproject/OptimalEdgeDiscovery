@@ -11,13 +11,13 @@
 
 Sandbox API Repository to describe, develop, document, and test the OptimalEdgeDiscovery Service API(s) within the Sub Project [Edge Cloud](https://lf-camaraproject.atlassian.net/wiki/x/IwEpBQ).
 
-* API Repository [wiki page](https://lf-camaraproject.atlassian.net/wiki/x/AYAtC)
+* API Repository [wiki page](https://lf-camaraproject.atlassian.net/wiki/x/AYAtCy)
 
 ## Scope
 
 * Service API(s) “OptimalEdgeDiscovery” (see APIBacklog.md) 
 * The API(s) provide(s) the API consumer with the ability to:  
-  * §Short API scope description§ !! Add here a scope description according to the API proposal
+  * Discover the optimal regions and zones for their edge cloud application
 * Describe, develop, document, and test the API(s)
 * Started: July 2022 (in [EdgeCloud](https://github.com/camaraproject/EdgeCloud) repository)
 <!-- * Incubating stage since: {{incubation date}} --> 
