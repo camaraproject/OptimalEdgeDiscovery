@@ -218,7 +218,7 @@ externalDocs:
 #                                     Servers                              #
 ############################################################################
 servers:
-  - url: "{apiRoot}/optimal-edge-discovery/v0rc1"
+  - url: "{apiRoot}/optimal-edge-discovery/v0.1rc1"
     variables:
       apiRoot:
         default: https://localhost:9091
