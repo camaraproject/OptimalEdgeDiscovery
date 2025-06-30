@@ -30,7 +30,7 @@ The API definition(s) are based on
 
 ## optimal-edge-discovery v0.1.0-rc1
 
-**optimal-edge-discovery v0.1.0-rc1 is the initial new release candidate version of this API, including initial documentation and implementation code.**
+**optimal-edge-discovery v0.1.0-rc1 is the initial release candidate version of this API, including initial documentation and implementation code.**
 
 - API definition **with inline documentation**:
   - [View it on ReDoc](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/OptimalEdgeDiscovery/r1.1/code/API_definitions/optimal-edge-discovery.yaml&nocors)
