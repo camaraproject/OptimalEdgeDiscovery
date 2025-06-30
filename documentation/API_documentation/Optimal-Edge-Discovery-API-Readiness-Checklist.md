@@ -14,6 +14,6 @@ Checklist for Optimal-Edge-Discovery v0.1.0-rc1 in r1.1
 |  8 | Enhanced API test cases & documentation      |   O   |         O         |    O    |    M   | N    |      |
 |  9 | Test result statement                        |   O   |         O         |    O    |    M   | N    |      |
 | 10 | API release numbering convention applied     |   M   |         M         |    M    |    M   | Y    |      |
-| 11 | Change log updated                           |   M   |         M         |    M    |    M   | Y    |      |
+| 11 | Change log updated                           |   M   |         M         |    M    |    M   | Y    |   [link](/CHANGELOG.md)    |
 | 12 | Previous public release was certified        |   O   |         O         |    O    |    M   | N    |      |
 | 13 | API description (for marketing)              |   O   |         O         |    M    |    M   | Y     | [Wiki link](https://lf-camaraproject.atlassian.net/wiki/spaces/CAM/pages/137199671/OptimalEdgeDiscovery+API+description) |
