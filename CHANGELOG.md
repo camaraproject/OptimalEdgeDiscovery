@@ -28,7 +28,7 @@ The API definition(s) are based on
 - Commonalities r3.2
 - Identity and Consent Management r3.2
 
-## optimal-edge-discovery v0.1.0-rc1
+## optimal-edge-discovery v0.1.0-rc.1
 
 **optimal-edge-discovery v0.1.0-rc1 is the initial release candidate version of this API, including initial documentation and implementation code.**
 
