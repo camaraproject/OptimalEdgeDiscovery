@@ -1,5 +1,5 @@
   @Optimal_Edge_Discovery
-Feature: CAMARA Optimal Edge Discovery API, vwip - Operations for discovering optimal edge cloud zones
+Feature: CAMARA Optimal Edge Discovery API, v0.1.0-rc.1 - Operations for discovering optimal edge cloud zones
 
 # Input to be provided by the implementation to the tests
 # References to OAS spec schemas refer to schemas specified in optimal-edge-discovery.yaml
