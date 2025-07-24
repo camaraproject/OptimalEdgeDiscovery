@@ -5,7 +5,7 @@ Feature: CAMARA Optimal Edge Discovery API, v0.1.0-rc.1 - Operations for discove
 # References to OAS spec schemas refer to schemas specified in optimal-edge-discovery.yaml
 
   Background: Common Optimal Edge Discovery setup
-    Given the resource "{apiroot}/optimal-edge-discovery/vwip" as base-url
+    Given the resource "{apiroot}/optimal-edge-discovery/v0.1rc1" as base-url
     And the header "Content-Type" is set to "application/json"
     And the header "Authorization" is set to a valid access token
     And the header "x-correlator" is set to a UUID value
