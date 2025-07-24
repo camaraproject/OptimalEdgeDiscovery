@@ -214,7 +214,7 @@ info:
     name: Apache-2.0
     url: "https://www.apache.org/licenses/LICENSE-2.0.html"
 externalDocs:
-  description: Project documentation at Camara
+  description: Product documentation at CAMARA
   url: https://github.com/camaraproject/OptimalEdgeDiscovery
 
 ############################################################################
