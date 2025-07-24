@@ -4,7 +4,7 @@ openapi: 3.0.3
 #                                     API info                             #
 ############################################################################
 info:
-  title: Optimal Edge Discovery API
+  title: Optimal Edge Discovery
   version: 0.1.0-rc.1
   x-camara-commonalities: 0.6
   description: |
