@@ -246,7 +246,7 @@ paths:
   /regions:
     get:
       summary: Fetch all Regions
-      operationId: get-regions
+      operationId: getRegions
       security:
         - openId:
             - "optimal-edge-discovery:regions:read"
@@ -281,7 +281,7 @@ paths:
         regions where edge cloud zones are available.
   /retrieve-optimal-edge-cloud-zones:
     post:
-      operationId: get-edgeCloudZone
+      operationId: discoverOptimalEdge
       security:
         - openId:
             - "optimal-edge-discovery:edge-zones:read"
