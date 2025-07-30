@@ -8,7 +8,7 @@ Feature: CAMARA Optimal Edge Discovery API, v0.1.0-rc.1 - Operations for discove
     Given the resource "{apiroot}/optimal-edge-discovery/v0.1rc1" as base-url
     And the header "Content-Type" is set to "application/json"
     And the header "Authorization" is set to a valid access token
-    And the header "x-correlator" is set to a UUID value
+    And the header "x-correlator" complies with the schema at "#/components/schemas/XCorrelator"
 
 ######### Happy Path Scenarios #################################
 
