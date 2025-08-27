@@ -5,7 +5,7 @@ openapi: 3.0.3
 ############################################################################
 info:
   title: Optimal Edge Discovery
-  version: wip
+  version: 0.1.0
   x-camara-commonalities: 0.6
   description: |
     # Introduction
@@ -219,7 +219,7 @@ externalDocs:
 #                                     Servers                              #
 ############################################################################
 servers:
-  - url: "{apiRoot}/optimal-edge-discovery/vwip"
+  - url: "{apiRoot}/optimal-edge-discovery/v0.1"
     variables:
       apiRoot:
         default: https://localhost:9091
