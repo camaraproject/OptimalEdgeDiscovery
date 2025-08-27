@@ -1,11 +1,11 @@
   @Optimal_Edge_Discovery
-Feature: CAMARA Optimal Edge Discovery API, vwip - Operations for discovering optimal edge cloud zones
+Feature: CAMARA Optimal Edge Discovery API, v0.1.0 - Operations for discovering optimal edge cloud zones
 
 # Input to be provided by the implementation to the tests
 # References to OAS spec schemas refer to schemas specified in optimal-edge-discovery.yaml
 
   Background: Common Optimal Edge Discovery setup
-    Given the resource "{apiroot}/optimal-edge-discovery/vwip" as base-url
+    Given the resource "{apiroot}/optimal-edge-discovery/v0.1" as base-url
     And the header "Content-Type" is set to "application/json"
     And the header "Authorization" is set to a valid access token
     And the header "x-correlator" complies with the schema at "#/components/schemas/XCorrelator"
