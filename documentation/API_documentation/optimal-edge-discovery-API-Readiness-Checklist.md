@@ -1,6 +1,6 @@
 # Optimal Edge Discovery API Readiness minimum criteria checklist
 
-Checklist for Optimal-Edge-Discovery v0.1.0
+Checklist for Optimal-Edge-Discovery v0.1.0 in r1.2
 
 | Nr | API release assets  | alpha | release-candidate |  initial<br>public | stable<br> public | Status | Reference information |
 |----|----------------------------------------------|:-----:|:-----------------:|:-------:|:------:|:----:|----|
