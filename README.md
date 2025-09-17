@@ -24,11 +24,18 @@ Sandbox API Repository to describe, develop, document, and test the OptimalEdgeD
 
 ## Release Information
 
+* Note: Please be aware that the project will have frequent updates to the main branch. There are no compatibility guarantees associated with code in any branch, including main, until a new release is created. For example, changes may be reverted before a release is created. **For best results, use the latest public release**.
+* **NEW: Latest public release [r1.2](https://github.com/camaraproject/OptimalEdgeDiscovery/releases/tag/r1.2) is available, with the following API version:**
+  * **optimal-edge-discovery v0.1.0**  
+  [[YAML]](https://github.com/camaraproject/OptimalEdgeDiscovery/blob/r1.2/code/API_definitions/optimal-edge-discovery.yaml)
+  [[View it on ReDoc]](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/OptimalEdgeDiscovery/r1.2/code/API_definitions/optimal-edge-discovery.yaml&nocors)
+  [[View it on Swagger Editor]](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/OptimalEdgeDiscovery/r1.2/code/API_definitions/optimal-edge-discovery.yaml)
+
 <!-- Optional: an explicit listing of the latest (pre-)release with additional information, e.g. links to the API definitions -->
 <!-- In addition use/uncomment one or multiple the following alternative options when becoming applicable -->
-Pre-releases of this sub project are available in https://github.com/camaraproject/OptimalEdgeDiscovery/releases
-The latest public release is available here: https://github.com/camaraproject/OptimalEdgeDiscovery/releases/latest
-For changes see [CHANGELOG.md](https://github.com/camaraproject/OptimalEdgeDiscovery/blob/main/CHANGELOG.md)
+* Pre-releases of this sub project are available in https://github.com/camaraproject/OptimalEdgeDiscovery/releases
+* The latest public release is available here: https://github.com/camaraproject/OptimalEdgeDiscovery/releases/latest
+* For changes see [CHANGELOG.md](https://github.com/camaraproject/OptimalEdgeDiscovery/blob/main/CHANGELOG.md)
 
 ## Contributing
 
