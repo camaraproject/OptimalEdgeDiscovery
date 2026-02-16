@@ -114,7 +114,7 @@ info:
         "edgeCloudZoneName": "Example Zone Name",
         "edgeCloudProvider": "Example Zone Provider",
         "edgeCloudRegion": "us-west-1",
-        "status": "active"
+        "edgeCloudZoneStatus": "active"
       }
     ],
     "applicationProfileId": "2fa85f64-5717-4562-b3fc-2c963f66afa0",
@@ -130,7 +130,7 @@ info:
     the Edge Cloud Zone.
     * `edgeCloudRegion` is the region of the closest Edge Cloud Zone to
     the user device.
-    * `status` is the status of the Edge Cloud Zone (default is 'unknown').
+    * `edgeCloudZoneStatus` is the status of the Edge Cloud Zone (default is 'unknown').
     * `edgeCloudZones` is an array of Edge Cloud Zones that match the query
     parameters. The array will contain at least one Edge Cloud Zone, and
     may contain multiple Edge Cloud Zones if there are multiple zones that
@@ -381,18 +381,12 @@ components:
           $ref: "#/components/schemas/EdgeCloudZoneId"
         edgeCloudZoneName:
           $ref: "#/components/schemas/EdgeCloudZoneName"
+        edgeCloudZoneStatus:
+          $ref: "#/components/schemas/EdgeCloudZoneStatus"
         edgeCloudProvider:
           $ref: "#/components/schemas/EdgeCloudProvider"
         edgeCloudRegion:
           $ref: "#/components/schemas/EdgeCloudRegion"
-        status:
-          description: Status of the Edge cloud zone (default is 'unknown')
-          type: string
-          enum:
-            - active
-            - inactive
-            - unknown
-          default: unknown
       required:
         - edgeCloudZoneId
         - edgeCloudZoneName
@@ -426,6 +420,15 @@ components:
         The common name of the closest Edge Cloud Zone to the user device.
       type: string
       example: "us-west-1"
+
+    EdgeCloudZoneStatus:
+      description: Status of the Edge Cloud Zone (default is 'unknown')
+      type: string
+      enum:
+        - active
+        - inactive
+        - unknown
+      default: unknown
 
     ErrorInfo:
       type: object
