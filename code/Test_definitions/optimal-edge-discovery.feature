@@ -1,5 +1,5 @@
   @Optimal_Edge_Discovery
-Feature: CAMARA Optimal Edge Discovery API, v0.1.0 - Operations for discovering optimal edge cloud zones
+Feature: CAMARA Optimal Edge Discovery API, vwip - Operations for discovering optimal edge cloud zones
 
 # Input to be provided by the implementation to the tests
 #
@@ -10,7 +10,7 @@ Feature: CAMARA Optimal Edge Discovery API, v0.1.0 - Operations for discovering 
 
   Background: Common Optimal Edge Discovery setup
     Given an environment at "apiRoot"
-    And the resource "/optimal-edge-discovery/v0.1"
+    And the resource "/optimal-edge-discovery/vwip"
     And the header "Content-Type" is set to "application/json"
     And the header "Authorization" is set to a valid access token
     And the header "x-correlator" complies with the schema at "#/components/schemas/XCorrelator"
