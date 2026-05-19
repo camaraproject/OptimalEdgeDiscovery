@@ -250,7 +250,8 @@ tags:
     description: |
       Discover the regions and zones in the edge cloud
       application, find optimal edge cloud zones for
-      your deployed applications, and retrieve viable
+      your deployed applications, optimal Application
+      Endpoints for your clients to connect to, and viable
       edge cloud zone candidates for pre-deployment planning.
 ############################################################################
 #                                     Paths                                #
