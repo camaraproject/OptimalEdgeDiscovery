@@ -40,6 +40,19 @@ info:
         region. This can be achieved using the
         `/retrieve-optimal-edge-cloud-zones` API.
 
+    - **Pre-deployment Edge Cloud Zone Viability Discovery**: To evaluate which
+        edge cloud zones are viable candidates for target areas and an
+        application profile before any active device or user session exists.
+        This can be achieved using the
+        `/retrieve-viable-edge-cloud-zones` API.
+
+    The pre-deployment operation is planning-oriented. It returns planning
+    estimates only and does not provide runtime steering, traffic-routing
+    instructions, or guarantees about future network performance. The API
+    intentionally exposes only public planning abstractions and does not expose
+    UPF, DNN, S-NSSAI, routing policy, topology, or other internal operator
+    details.
+
     To call these endpoints, the API consumer must first obtain a valid OAuth2 token
     from the token endpoint, and pass it as an `Authorization` header in the API
     request.
@@ -237,8 +250,8 @@ tags:
     description: |
       Discover the regions and zones in the edge cloud
       application, find optimal edge cloud zones for
-      your deployed applications, and optimal
-      Application Endpoints for your clients to connect to.
+      your deployed applications, and retrieve viable
+      edge cloud zone candidates for pre-deployment planning.
 ############################################################################
 #                                     Paths                                #
 ############################################################################
@@ -333,6 +346,63 @@ paths:
          register your deployed application. You can choose to search without
          passing any of the inputs parameters or a combination of Application
          Profile and device information.
+  /retrieve-viable-edge-cloud-zones:
+    post:
+      operationId: retrieveViableEdgeCloudZones
+      security:
+        - openId:
+            - "optimal-edge-discovery:viable-edge-zones:read"
+      parameters:
+        - $ref: "#/components/parameters/x-correlator"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreDeploymentEdgeDiscoveryInfo"
+            examples:
+              Retrieve Viable Edge Cloud Zones:
+                $ref: "#/components/examples/RetrieveViableEdgeCloudZonesRequest"
+      responses:
+        "200":
+          description: |
+            Returns edge cloud zone viability results for pre-deployment
+            planning. Results are estimates and are not runtime performance
+            guarantees.
+          headers:
+            x-correlator:
+              $ref: "#/components/headers/x-correlator"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreDeploymentEdgeDiscoveryResponse"
+              examples:
+                Viable Edge Cloud Zones:
+                  $ref: "#/components/examples/RetrieveViableEdgeCloudZonesResponse"
+        "400":
+          $ref: "#/components/responses/Generic400"
+        "401":
+          $ref: "#/components/responses/Generic401"
+        "403":
+          $ref: "#/components/responses/Generic403"
+        "404":
+          $ref: "#/components/responses/Generic404"
+        "422":
+          $ref: "#/components/responses/Generic422"
+        "429":
+          $ref: "#/components/responses/Generic429"
+      tags:
+        - Discovery
+      summary: Retrieve viable edge cloud zones for pre-deployment planning
+      description: |
+        Evaluates which edge cloud zones are viable for target geographic
+        areas, an application profile, and optional planning criteria before
+        deployment.
+
+        The operation does not require an active device and does not return
+        runtime steering, routing, topology, UPF, DNN, S-NSSAI, or other
+        operator-internal details. Estimated metrics are planning indicators
+        only and must not be interpreted as runtime guarantees.
 
 components:
   securitySchemes:
@@ -386,13 +456,7 @@ components:
         edgeCloudRegion:
           $ref: "#/components/schemas/EdgeCloudRegion"
         status:
-          description: Status of the Edge cloud zone (default is 'unknown')
-          type: string
-          enum:
-            - active
-            - inactive
-            - unknown
-          default: unknown
+          $ref: "#/components/schemas/EdgeCloudZoneStatus"
       required:
         - edgeCloudZoneId
         - edgeCloudZoneName
@@ -426,6 +490,15 @@ components:
         The common name of the closest Edge Cloud Zone to the user device.
       type: string
       example: "us-west-1"
+
+    EdgeCloudZoneStatus:
+      description: Status of the Edge cloud zone (default is 'unknown')
+      type: string
+      enum:
+        - active
+        - inactive
+        - unknown
+      default: unknown
 
     ErrorInfo:
       type: object
@@ -463,6 +536,245 @@ components:
       required:
         - applicationProfileId
 
+    PreDeploymentEdgeDiscoveryInfo:
+      description: |
+        Request resource to retrieve viable edge cloud zones for
+        pre-deployment planning. The request is not associated with an active
+        device or session. Application network and compute requirements are
+        referenced through `applicationProfileId`; this request only describes
+        target areas and optional planning criteria.
+      type: object
+      required:
+        - targetAreas
+        - applicationProfileId
+      properties:
+        targetAreas:
+          description: |
+            Target demand or service areas for which edge cloud zone viability
+            is evaluated.
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/TargetArea"
+        applicationProfileId:
+          $ref: "#/components/schemas/ApplicationProfileId"
+        edgeCloudZoneCriteria:
+          $ref: "#/components/schemas/EdgeCloudZoneCriteria"
+        networkOperatorCriteria:
+          $ref: "#/components/schemas/NetworkOperatorCriteria"
+        maxResults:
+          description: Maximum number of viability results to return per
+            target area.
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+        includeNonViableCandidates:
+          description: |
+            Indicates whether results with `NOT_VIABLE` or `UNKNOWN` viability
+            can be included in the response. When false, only `VIABLE` and
+            `PARTIALLY_VIABLE` results are returned.
+          type: boolean
+          default: false
+
+    PreDeploymentEdgeDiscoveryResponse:
+      description: |
+        Response resource containing edge cloud zone viability results for
+        pre-deployment planning. Results are planning estimates and do not
+        represent runtime availability guarantees, reservations, or SLAs.
+      type: object
+      required:
+        - applicationProfileId
+        - areaResults
+        - validUntil
+      properties:
+        applicationProfileId:
+          $ref: "#/components/schemas/ApplicationProfileId"
+        areaResults:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/AreaEdgeCloudZoneViabilityResult"
+        validUntil:
+          description: |
+            Timestamp until which the API provider considers this planning
+            response fresh enough for pre-deployment decision making. This is
+            not a runtime availability guarantee, reservation, or SLA.
+          type: string
+          format: date-time
+
+    AreaEdgeCloudZoneViabilityResult:
+      description: Viability results for a requested target area.
+      type: object
+      required:
+        - targetArea
+        - edgeCloudZoneViabilities
+      properties:
+        targetArea:
+          $ref: "#/components/schemas/TargetArea"
+        edgeCloudZoneViabilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/EdgeCloudZoneViability"
+
+    EdgeCloudZoneViability:
+      description: |
+        Planning result for one candidate edge cloud zone. This result is not
+        a runtime routing decision and does not expose operator-internal
+        topology or policy.
+      type: object
+      required:
+        - edgeCloudZone
+        - viability
+      properties:
+        edgeCloudZone:
+          $ref: "#/components/schemas/EdgeCloudZone"
+        viability:
+          type: string
+          description: |
+            Planning viability of the edge cloud zone for the requested target
+            area and application profile.
+          enum:
+            - VIABLE
+            - PARTIALLY_VIABLE
+            - NOT_VIABLE
+            - UNKNOWN
+        viabilityReason:
+          description: |
+            Optional human-readable explanation for partial, non-viable, or
+            unknown results. This field should be omitted for straightforward
+            `VIABLE` results.
+          type: string
+        supportedAreas:
+          description: Areas supported by this edge cloud zone for planning.
+          type: array
+          items:
+            $ref: "#/components/schemas/TargetArea"
+        networkOperatorCommercialInfo:
+          $ref: "#/components/schemas/NetworkOperatorCommercialInfo"
+        estimatedMetrics:
+          $ref: "#/components/schemas/EstimatedMetrics"
+
+    EdgeCloudZoneCriteria:
+      description: Optional edge-cloud-zone candidate criteria.
+      type: object
+      properties:
+        edgeCloudRegion:
+          $ref: "#/components/schemas/EdgeCloudRegion"
+        edgeCloudProviders:
+          description: |
+            Edge cloud providers to include as candidate providers. This is a
+            provider-level planning filter and is not a network routing policy.
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/EdgeCloudProvider"
+      minProperties: 1
+
+    NetworkOperatorCriteria:
+      description: |
+        Optional broad network-operator-side planning criteria. This object
+        must not contain routing, topology, UPF, DNN, S-NSSAI, or policy
+        details.
+      type: object
+      properties:
+        pricingTiers:
+          description: |
+            Broad network-operator commercial planning classes to consider.
+            These values are not price quotes and do not represent edge cloud
+            provider pricing.
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/PricingTier"
+      minProperties: 1
+
+    NetworkOperatorCommercialInfo:
+      description: |
+        Broad network-operator-side commercial planning information associated
+        with a candidate edge cloud zone. This is not an edge cloud provider
+        price and is not a binding quote.
+      type: object
+      properties:
+        pricingTiers:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/PricingTier"
+
+    PricingTier:
+      description: Broad network-operator commercial planning class.
+      type: string
+      enum:
+        - STANDARD
+        - PREMIUM
+        - ENTERPRISE
+        - UNKNOWN
+
+    TargetArea:
+      description: |
+        Target demand or service area for pre-deployment planning.
+      type: object
+      properties:
+        areaId:
+          $ref: "#/components/schemas/AreaId"
+        area:
+          $ref: "#/components/schemas/Area"
+      anyOf:
+        - required:
+            - areaId
+        - required:
+            - area
+
+    AreaId:
+      description: Identifier of a target or supported area.
+      type: string
+      minLength: 1
+      maxLength: 128
+      example: "patras"
+
+    # TODO: Replace this local placeholder with a reference to the CAMARA
+    # Commonalities Area schema once the common schema file is imported into
+    # this repository.
+    Area:
+      description: |
+        Geographic area used for pre-deployment planning. This placeholder
+        should be replaced by the CAMARA Commonalities `Area` schema.
+      type: object
+      properties:
+        areaId:
+          $ref: "#/components/schemas/AreaId"
+        name:
+          type: string
+          example: "Patras Metro"
+        countryCode:
+          type: string
+          pattern: "^[A-Z]{2}$"
+          example: "GR"
+      minProperties: 1
+
+    EstimatedMetrics:
+      description: Planning metrics estimated for the candidate edge cloud zone.
+      type: object
+      properties:
+        latencyEstimate:
+          $ref: "#/components/schemas/LatencyEstimate"
+      minProperties: 1
+
+    LatencyEstimate:
+      description: |
+        Estimated latency values for pre-deployment planning. These values are
+        not runtime guarantees.
+      type: object
+      properties:
+        p50LatencyMs:
+          type: integer
+          minimum: 0
+          example: 8
+        p95LatencyMs:
+          type: integer
+          minimum: 0
+          example: 14
 
     DeviceResponse:
       description: |
@@ -835,3 +1147,54 @@ components:
             publicAddress: "84.125.93.10"
             publicPort: 59765
           networkAccessIdentifier: "123456789@domain.com"
+
+    RetrieveViableEdgeCloudZonesRequest:
+      description: |
+        Retrieve viable edge cloud zones for a cloud gaming application profile
+        before deployment.
+      value:
+        targetAreas:
+          - areaId: "patras"
+          - areaId: "athens"
+        applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
+        edgeCloudZoneCriteria:
+          edgeCloudRegion: "gr-west-1"
+          edgeCloudProviders:
+            - "EdgeCo Neutral Host"
+        networkOperatorCriteria:
+          pricingTiers:
+            - STANDARD
+            - PREMIUM
+        maxResults: 4
+        includeNonViableCandidates: false
+
+    RetrieveViableEdgeCloudZonesResponse:
+      description: Viable edge cloud zone planning response.
+      value:
+        applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
+        validUntil: "2026-05-19T12:15:00Z"
+        areaResults:
+          - targetArea:
+              areaId: "patras"
+            edgeCloudZoneViabilities:
+              - edgeCloudZone:
+                  edgeCloudZoneId: "4f7b5555-6457-4890-9d4e-1dc79f44ab66"
+                  edgeCloudZoneName: "GR West Zone A"
+                  edgeCloudProvider: "EdgeCo Neutral Host"
+                  edgeCloudRegion: "gr-west-1"
+                  status: active
+                viability: VIABLE
+                supportedAreas:
+                  - areaId: "patras"
+                  - areaId: "ioannina"
+                  - areaId: "larissa"
+                networkOperatorCommercialInfo:
+                  pricingTiers:
+                    - PREMIUM
+                estimatedMetrics:
+                  latencyEstimate:
+                    p50LatencyMs: 8
+                    p95LatencyMs: 14
+          - targetArea:
+              areaId: "athens"
+            edgeCloudZoneViabilities: []
