@@ -41,7 +41,7 @@ info:
         `/retrieve-optimal-edge-cloud-zones` API.
 
     - **Pre-deployment Edge Cloud Zone Viability Discovery**: To evaluate which
-        edge cloud zones are viable candidates for target areas and an
+        edge cloud zones known to the API Publisher are viable candidates for target areas and an
         application profile before any active device or user session exists.
         This can be achieved using the
         `/retrieve-viable-edge-cloud-zones` API.
