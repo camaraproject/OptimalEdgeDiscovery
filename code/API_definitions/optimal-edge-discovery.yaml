@@ -716,16 +716,11 @@ components:
       description: |
         Target demand or service area for pre-deployment planning.
       type: object
+      required:
+        - areaId
       properties:
         areaId:
           $ref: "#/components/schemas/AreaId"
-        area:
-          $ref: "#/components/schemas/Area"
-      anyOf:
-        - required:
-            - areaId
-        - required:
-            - area
 
     AreaId:
       description: Identifier of a target or supported area.
@@ -733,26 +728,6 @@ components:
       minLength: 1
       maxLength: 128
       example: "patras"
-
-    # TODO: Replace this local placeholder with a reference to the CAMARA
-    # Commonalities Area schema once the common schema file is imported into
-    # this repository.
-    Area:
-      description: |
-        Geographic area used for pre-deployment planning. This placeholder
-        should be replaced by the CAMARA Commonalities `Area` schema.
-      type: object
-      properties:
-        areaId:
-          $ref: "#/components/schemas/AreaId"
-        name:
-          type: string
-          example: "Patras Metro"
-        countryCode:
-          type: string
-          pattern: "^[A-Z]{2}$"
-          example: "GR"
-      minProperties: 1
 
     EstimatedMetrics:
       description: Planning metrics estimated for the candidate edge cloud zone.
