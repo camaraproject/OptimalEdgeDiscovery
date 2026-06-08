@@ -617,15 +617,6 @@ components:
             or unknown results. This field should be omitted for
             straightforward `VIABLE` results.
           type: string
-        servedTargetAreas:
-          description: |
-            Requested target areas that can be served by this candidate edge
-            cloud zone. This can include other target areas from the same
-            request in addition to the `targetArea` of the current per-area
-            result.
-          type: array
-          items:
-            $ref: "#/components/schemas/TargetArea"
         networkOperatorPlanningInfo:
           $ref: "#/components/schemas/NetworkOperatorPlanningInfo"
         estimatedMetrics:
@@ -715,19 +706,113 @@ components:
     TargetArea:
       description: |
         Target demand or service area for pre-deployment planning.
+        The area is expressed as explicit geographic geometry to avoid relying on
+        provider-specific area identifiers.
       type: object
       required:
-        - areaId
+        - area
       properties:
-        areaId:
-          $ref: "#/components/schemas/AreaId"
+        area:
+          $ref: "#/components/schemas/Area"
 
-    AreaId:
-      description: Identifier of a target or supported area.
+    Area:
+      type: object
+      description: |
+        Geographic area used for pre-deployment planning. This follows the
+        CAMARA pattern used by location/region APIs, where an area is expressed
+        using explicit geometry.
+      required:
+        - areaType
+      properties:
+        areaType:
+          $ref: "#/components/schemas/AreaType"
+      discriminator:
+        propertyName: areaType
+        mapping:
+          CIRCLE: "#/components/schemas/Circle"
+          POLYGON: "#/components/schemas/Polygon"
+
+    AreaType:
       type: string
-      minLength: 1
-      maxLength: 128
-      example: "patras"
+      description: |
+        Type of geographic area.
+        CIRCLE - Area defined by a center point and radius.
+        POLYGON - Area defined by a polygon boundary.
+      enum:
+        - CIRCLE
+        - POLYGON
+
+    Circle:
+      description: Circular geographic area.
+      allOf:
+        - $ref: "#/components/schemas/Area"
+        - type: object
+          required:
+            - center
+            - radius
+          properties:
+            center:
+              $ref: "#/components/schemas/Point"
+            radius:
+              type: number
+              description: Radius in meters from the center point.
+              minimum: 1
+          example:
+            areaType: CIRCLE
+            center:
+              latitude: 38.2466
+              longitude: 21.7346
+            radius: 5000
+
+    Polygon:
+      description: Polygon geographic area.
+      allOf:
+        - $ref: "#/components/schemas/Area"
+        - type: object
+          required:
+            - boundary
+          properties:
+            boundary:
+              $ref: "#/components/schemas/PointList"
+
+    PointList:
+      type: array
+      description: List of points defining a polygon boundary.
+      minItems: 3
+      maxItems: 15
+      items:
+        $ref: "#/components/schemas/Point"
+
+    Point:
+      type: object
+      description: Coordinates defining a location.
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          $ref: "#/components/schemas/Latitude"
+        longitude:
+          $ref: "#/components/schemas/Longitude"
+      example:
+        latitude: 38.2466
+        longitude: 21.7346
+
+    Latitude:
+      description: Latitude component of a location.
+      type: number
+      format: double
+      minimum: -90
+      maximum: 90
+      example: 38.2466
+
+    Longitude:
+      description: Longitude component of a location.
+      type: number
+      format: double
+      minimum: -180
+      maximum: 180
+      example: 21.7346
 
     EstimatedMetrics:
       description: Planning metrics estimated for the candidate edge cloud zone.
@@ -1124,8 +1209,18 @@ components:
         before deployment using the optimal edge discovery operation.
       value:
         targetAreas:
-          - areaId: "patras"
-          - areaId: "athens"
+          - area:
+              areaType: CIRCLE
+              center:
+                latitude: 38.2466
+                longitude: 21.7346
+              radius: 5000
+          - area:
+              areaType: CIRCLE
+              center:
+                latitude: 37.9838
+                longitude: 23.7275
+              radius: 10000
         applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
         edgeCloudZoneCriteria:
           edgeCloudRegion: "gr-west-1"
@@ -1144,7 +1239,12 @@ components:
         planning results.
       value:
         targetAreas:
-          - areaId: "patras"
+          - area:
+              areaType: CIRCLE
+              center:
+                latitude: 38.2466
+                longitude: 21.7346
+              radius: 5000
         applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
         edgeCloudZoneCriteria:
           edgeCloudRegion: "gr-west-1"
@@ -1164,7 +1264,12 @@ components:
             edgeCloudZoneStatus: active
         areaResults:
           - targetArea:
-              areaId: "patras"
+              area:
+                areaType: CIRCLE
+                center:
+                  latitude: 38.2466
+                  longitude: 21.7346
+                radius: 5000
             edgeCloudZoneViabilities:
               - edgeCloudZone:
                   edgeCloudZoneId: "4f7b5555-6457-4890-9d4e-1dc79f44ab66"
@@ -1173,10 +1278,6 @@ components:
                   edgeCloudRegion: "gr-west-1"
                   edgeCloudZoneStatus: active
                 viability: VIABLE
-                servedTargetAreas:
-                  - areaId: "patras"
-                  - areaId: "ioannina"
-                  - areaId: "larissa"
                 networkOperatorPlanningInfo:
                   planningClasses:
                     - PREMIUM
@@ -1195,8 +1296,6 @@ components:
                   conditionType: SERVICE_ACTIVATION_REQUIRED
                   expectedActivationDelay: "PT1H"
                   description: "Service activation is required before deployment."
-                servedTargetAreas:
-                  - areaId: "patras"
                 networkOperatorPlanningInfo:
                   planningClasses:
                     - STANDARD
@@ -1205,7 +1304,12 @@ components:
                     p50LatencyMs: 11
                     p95LatencyMs: 18
           - targetArea:
-              areaId: "athens"
+              area:
+                areaType: CIRCLE
+                center:
+                  latitude: 37.9838
+                  longitude: 23.7275
+                radius: 10000
             edgeCloudZoneViabilities: []
 
     PreDeploymentPlanningWithNonViableResponse:
@@ -1216,7 +1320,12 @@ components:
         edgeCloudZones: []
         areaResults:
           - targetArea:
-              areaId: "patras"
+              area:
+                areaType: CIRCLE
+                center:
+                  latitude: 38.2466
+                  longitude: 21.7346
+                radius: 5000
             edgeCloudZoneViabilities:
               - edgeCloudZone:
                   edgeCloudZoneId: "dc10c463-d604-4f2f-a002-c1199de12d6f"
@@ -1226,7 +1335,6 @@ components:
                   edgeCloudZoneStatus: active
                 viability: NOT_VIABLE
                 viabilityReason: "The requested application profile requirements cannot be met for this target area."
-                servedTargetAreas: []
                 estimatedMetrics:
                   latencyEstimate:
                     p50LatencyMs: 35
