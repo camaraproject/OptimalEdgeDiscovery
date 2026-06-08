@@ -45,7 +45,7 @@ info:
         target areas and an application profile before any active device or
         user session exists.
 
-    Pre-deployment discovery is planning-oriented. It returns planning
+    The pre-deployment operation is planning-oriented. It returns planning
     estimates only and does not provide runtime steering, traffic-routing
     instructions, or guarantees about future network performance. The API
     intentionally exposes only public planning abstractions and does not expose
@@ -58,14 +58,14 @@ info:
 
     # Identifying the device
 
-    For device-specific discovery, the API returns the closest Edge Cloud Zone
-    to a given device, so that device needs to be identifiable by the network.
-    This can be achieved by passing one or more device identifiers in the
-    request.
+    The API returns the closest Edge Cloud Zone to a given device, so that
+    device needs to be identifiable by the network. This can be achieved either
+    by passing one or more device identifiers in the request, or, from the
+    three-legged access token where implemented by the operator.
 
     ## Passing device identifier(s) in the request
-    At least one of the following device identifiers must be provided for
-    device-specific discovery:
+    At least one of the following device identifiers must be provided, unless
+    using a 3-legged access toekn (see next section):
      - Phone number (i.e. MSISDN)
      - Network Access Identifier assigned by the mobile network operator for the device
      - IPv6 address
@@ -82,6 +82,22 @@ info:
     CAMARA does not currently allow its use. After the CAMARA meta-release work
     is concluded and the relevant issues are resolved, its use will need to be
     explicitly documented in the guidelines.
+
+
+    ## Identifying the device from the access token
+
+    This API requires the API consumer to identify a device as the subject of
+    the API as follows:
+
+    - When the API is invoked using a two-legged access token, the subject will be
+    identified from the optional `device` object, which therefore MUST be provided.
+    - When a three-legged access token is used however, this optional identifier
+    MUST NOT be provided, as the subject will be uniquely identified from the access
+    token.
+
+    This approach simplifies API usage for API consumers using a three-legged access
+    token to invoke the API by relying on the information that is associated with the
+    access token and was identified during the authentication process.
 
     ## Error handling:
 
@@ -143,6 +159,9 @@ info:
       - `ipv6Address`: The public IPv6 address of the device.
     The response will contain only one of these identifiers, depending on
     which identifier was used to identify the device in the request.
+    If the device was identified from the access token, the `device` object
+    will not be present in the response, and the `applicationProfileId` will
+    be the only field returned.
 
     For pre-deployment planning requests, the API consumer provides
     `targetAreas` instead of a device identifier. The response can include
@@ -216,7 +235,7 @@ externalDocs:
 #                                     Servers                              #
 ############################################################################
 servers:
-  - url: "{apiRoot}/optimal-edge-discovery/v0.1.0"
+  - url: "{apiRoot}/optimal-edge-discovery/vwip"
     variables:
       apiRoot:
         default: https://localhost:9091
@@ -232,9 +251,11 @@ tags:
       Get all Region IDs and Names for edge cloud zones
   - name: Discovery
     description: |
-      Discover the regions and zones in the edge cloud application and find
-      optimal edge cloud zones for deployed applications or pre-deployment
-      planning.
+      Discover the regions and zones in the edge cloud
+      application, find optimal edge cloud zones for
+      your deployed applications, optimal Application
+      Endpoints for your clients to connect to, and viable
+      edge cloud zone candidates for pre-deployment planning.
 ############################################################################
 #                                     Paths                                #
 ############################################################################
@@ -331,17 +352,14 @@ paths:
           $ref: "#/components/responses/Generic429"
       tags:
         - Discovery
-      summary: Discover optimal edge cloud zones
+      summary: Discover optimal edge cloud zones for deployed applications
       description: |
-        Returns a list of optimal edge cloud zones where an application can be
-        deployed or registered. The request must provide either `device` for
-        device-specific discovery, or `targetAreas` for pre-deployment planning
-        before any active device or user session exists.
-
-        When `targetAreas` are provided, returned viability and metric values
-        are planning indicators only. They do not represent runtime steering,
-        routing, topology, UPF, DNN, S-NSSAI, operator-internal details,
-        reservations, SLAs, or future performance guarantees.
+        Returns a list of optimal edge cloud zones where you can register your
+        deployed application. You can choose to search with a combination of
+        Application Profile and device information, or with target areas for
+        pre-deployment planning. Planning results are estimates only and do not
+        represent runtime steering, routing, topology, reservations, SLAs, or
+        future performance guarantees.
 
 components:
   securitySchemes:
