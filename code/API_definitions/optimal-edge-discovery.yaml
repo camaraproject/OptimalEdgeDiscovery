@@ -40,10 +40,11 @@ info:
         region. This can be achieved using the
         `/retrieve-optimal-edge-cloud-zones` API.
 
-        The same operation can also be used before deployment to evaluate which
+    - **Pre-deployment Edge Cloud Zone Viability Discovery**: To evaluate which
         edge cloud zones known to the API Publisher are viable candidates for
         target areas and an application profile before any active device or
-        user session exists.
+        user session exists. This can be achieved using the
+        `/retrieve-viable-edge-cloud-zones` API.
 
     The pre-deployment operation is planning-oriented. It returns planning
     estimates only and does not provide runtime steering, traffic-routing
@@ -101,13 +102,13 @@ info:
 
     ## Error handling:
 
-    - If neither `device` nor `targetAreas` is provided in the request, then
-    the server will return an error with the `422 MISSING_IDENTIFIER` error
-    code.
+    - If the subject cannot be identified from the access token and the
+    optional `device` object is not included in the request, then the server
+    will return an error with the `422 MISSING_IDENTIFIER` error code.
 
-    - If both `device` and `targetAreas` are provided in the request, then the
-    server will return a `400 INVALID_ARGUMENT` error because the request mixes
-    the device-specific and planning discovery modes.
+    - If the subject can be identified from the access token and the optional
+    `device` object is also included in the request, then the server will
+    return an error with the `422 UNNECESSARY_IDENTIFIER` error code.
 
     # Responses
 
@@ -163,10 +164,11 @@ info:
     will not be present in the response, and the `applicationProfileId` will
     be the only field returned.
 
-    For pre-deployment planning requests, the API consumer provides
-    `targetAreas` instead of a device identifier. The response can include
-    `areaResults` with planning viability, served target areas, abstract
-    planning classes, and estimated metrics for candidate edge cloud zones.
+    For pre-deployment planning, the API consumer can use
+    `/retrieve-viable-edge-cloud-zones` with `targetAreas` instead of a device
+    identifier. The response can include `areaResults` with planning viability,
+    served target areas, abstract planning classes, and estimated metrics for
+    candidate edge cloud zones.
 
     ## Errors
 
@@ -305,22 +307,20 @@ paths:
       parameters:
         - $ref: "#/components/parameters/x-correlator"
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/OptimalEdgeDiscoveryInfo"
             examples:
+              Identify Device By 3-Legged Access Token:
+                $ref: '#/components/examples/IdentifyDeviceBy3LeggedToken'
               Identify Device By Phone Number:
                 $ref: '#/components/examples/IdentifyDeviceByPhoneNumber'
               Identify Device By IP Address:
                 $ref: '#/components/examples/IdentifyDeviceByIPAddress'
               Identify Device By Multiple Identifiers:
                 $ref: '#/components/examples/IdentifyDeviceByMultipleIdentifiers'
-              Pre-deployment Planning By Target Areas:
-                $ref: "#/components/examples/PreDeploymentPlanningRequest"
-              Pre-deployment Planning Including Non-viable Candidates:
-                $ref: "#/components/examples/PreDeploymentPlanningWithNonViableRequest"
 
       responses:
         "200":
@@ -333,6 +333,58 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EdgeDiscoveryResponse"
+        "400":
+          $ref: "#/components/responses/Generic400"
+        "401":
+          $ref: "#/components/responses/Generic401"
+        "403":
+          $ref: "#/components/responses/Generic403"
+        "404":
+          $ref: "#/components/responses/Generic404"
+        "422":
+          $ref: "#/components/responses/Generic422"
+        "429":
+          $ref: "#/components/responses/Generic429"
+      tags:
+        - Discovery
+      summary: Discover optimal edge cloud zones for deployed applications
+      description: Returns a list of optimal edge cloud zones where you can
+         register your deployed application. You can choose to search without
+         passing any of the inputs parameters or a combination of Application
+         Profile and device information.
+  /retrieve-viable-edge-cloud-zones:
+    post:
+      operationId: retrieveViableEdgeCloudZones
+      security:
+        - openId:
+            - "optimal-edge-discovery:viable-edge-zones:read"
+      parameters:
+        - $ref: "#/components/parameters/x-correlator"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreDeploymentEdgeDiscoveryInfo"
+            examples:
+              Pre-deployment Planning By Target Areas:
+                $ref: "#/components/examples/PreDeploymentPlanningRequest"
+              Pre-deployment Planning Including Non-viable Candidates:
+                $ref: "#/components/examples/PreDeploymentPlanningWithNonViableRequest"
+
+      responses:
+        "200":
+          description: |
+            Returns edge cloud zone viability results for pre-deployment
+            planning. Results are estimates and are not runtime performance
+            guarantees.
+          headers:
+            x-correlator:
+              $ref: "#/components/headers/x-correlator"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreDeploymentEdgeDiscoveryResponse"
               examples:
                 Pre-deployment Planning Results:
                   $ref: "#/components/examples/PreDeploymentPlanningResponse"
@@ -352,14 +404,16 @@ paths:
           $ref: "#/components/responses/Generic429"
       tags:
         - Discovery
-      summary: Discover optimal edge cloud zones for deployed applications
+      summary: Retrieve viable edge cloud zones for pre-deployment planning
       description: |
-        Returns a list of optimal edge cloud zones where you can register your
-        deployed application. You can choose to search with a combination of
-        Application Profile and device information, or with target areas for
-        pre-deployment planning. Planning results are estimates only and do not
-        represent runtime steering, routing, topology, reservations, SLAs, or
-        future performance guarantees.
+        Evaluates which edge cloud zones known to the API Publisher are viable
+        candidates for target geographic areas and an application profile
+        before deployment.
+
+        The operation does not require an active device and does not return
+        runtime steering, routing, topology, UPF, DNN, S-NSSAI, or other
+        operator-internal details. Estimated metrics are planning indicators
+        only and must not be interpreted as runtime guarantees.
 
 components:
   securitySchemes:
@@ -386,28 +440,44 @@ components:
     EdgeDiscoveryResponse:
       type: object
       description: |
-        Response for the optimal edge discovery API. It contains edge cloud
-        zones that match the query parameters. For target-area planning
-        requests, it can also contain area-specific viability results.
+        Response for the optimal edge discovery API. It contains a list of
+        edge cloud zones that match the query parameters.
       properties:
         edgeCloudZones:
           type: array
           items:
             $ref: "#/components/schemas/EdgeCloudZone"
-          description: |
-            Candidate edge cloud zones that match the request. For device
-            discovery requests, this is the primary result list. For
-            pre-deployment planning requests, this field is optional summary
-            output containing selected candidates across the requested target
-            areas; `areaResults` is the authoritative per-area planning result.
+          minItems: 1
         applicationProfileId:
           $ref: "#/components/schemas/ApplicationProfileId"
         device:
           $ref: "#/components/schemas/DeviceResponse"
+
+    PreDeploymentEdgeDiscoveryResponse:
+      type: object
+      description: |
+        Response for pre-deployment edge cloud zone viability discovery.
+        `edgeCloudZones` is the canonical list of candidate edge cloud zone
+        resources. Area-specific viability results reference candidates by
+        `edgeCloudZoneId` and contain only planning-specific assessment fields.
+      required:
+        - applicationProfileId
+        - edgeCloudZones
+        - areaResults
+        - validUntil
+      properties:
+        applicationProfileId:
+          $ref: "#/components/schemas/ApplicationProfileId"
+        edgeCloudZones:
+          description: |
+            Canonical list of edge cloud zone resources referenced by
+            `areaResults`.
+          type: array
+          items:
+            $ref: "#/components/schemas/EdgeCloudZone"
         areaResults:
           description: |
-            Area-specific planning results. This field is returned when the
-            request includes `targetAreas`.
+            Area-specific planning results.
           type: array
           minItems: 1
           items:
@@ -497,33 +567,41 @@ components:
 
     OptimalEdgeDiscoveryInfo:
       description: |
-        Resource to obtain optimal edge cloud zones for a given application
-        profile. A request can identify a device for user-proximity discovery,
-        or provide target areas and planning criteria for pre-deployment
-        discovery before any active device or user session exists. Application
-        network and compute requirements are referenced through
-        `applicationProfileId`.
-
-        Exactly one discovery mode must be selected: provide `device` for
-        device-specific discovery, or provide `targetAreas` for
-        pre-deployment planning discovery. Requests that provide neither field,
-        or both fields, are invalid. Planning-only fields
-        `networkOperatorCriteria`, `maxResults`, and
-        `includeNonViableCandidates` must not be sent with device-specific
-        discovery requests. This is expressed with `oneOf` and `not`; API
-        providers should enforce the same validation even when tooling does not
-        fully enforce these OpenAPI semantics.
+        Resource to obtain the optimal edge cloud zone for a given application
+        profile and device information. The API returns the closest Edge Cloud
+        Zone to a given device, so the device needs to be identifiable by the
+        network. This can be achieved either by passing a device identifier in
+        the request header, or, from the 3-legged access token where implemented
+        by the operator.
       type: object
       properties:
         device:
           $ref: "#/components/schemas/Device"
         applicationProfileId:
           $ref: "#/components/schemas/ApplicationProfileId"
+        edgeCloudRegion:
+          $ref: "#/components/schemas/EdgeCloudRegion"
+      required:
+        - applicationProfileId
+
+    PreDeploymentEdgeDiscoveryInfo:
+      description: |
+        Request resource to retrieve viable edge cloud zones for
+        pre-deployment planning. The request is not associated with an active
+        device or session. Application network and compute requirements are
+        referenced through `applicationProfileId`; this request only describes
+        target areas and optional planning criteria.
+      type: object
+      required:
+        - applicationProfileId
+        - targetAreas
+      properties:
+        applicationProfileId:
+          $ref: "#/components/schemas/ApplicationProfileId"
         targetAreas:
           description: |
             Target demand or service areas for which edge cloud zone viability
-            is evaluated before deployment. When this field is present, the
-            response can include `areaResults`.
+            is evaluated before deployment.
           type: array
           minItems: 1
           items:
@@ -546,26 +624,6 @@ components:
             `CONDITIONALLY_VIABLE` results are returned.
           type: boolean
           default: false
-      required:
-        - applicationProfileId
-      oneOf:
-        - required:
-            - device
-          not:
-            anyOf:
-              - required:
-                  - targetAreas
-              - required:
-                  - networkOperatorCriteria
-              - required:
-                  - maxResults
-              - required:
-                  - includeNonViableCandidates
-        - required:
-            - targetAreas
-          not:
-            required:
-              - device
 
     AreaEdgeCloudZoneViabilityResult:
       description: Viability results for a requested target area.
@@ -588,11 +646,11 @@ components:
         topology or policy.
       type: object
       required:
-        - edgeCloudZone
+        - edgeCloudZoneId
         - viability
       properties:
-        edgeCloudZone:
-          $ref: "#/components/schemas/EdgeCloudZone"
+        edgeCloudZoneId:
+          $ref: "#/components/schemas/EdgeCloudZoneId"
         viability:
           type: string
           description: |
@@ -1121,12 +1179,13 @@ components:
                 code: SERVICE_NOT_APPLICABLE
                 message: The service is not available for the provided identifier.
             GENERIC_422_MISSING_IDENTIFIER:
-              description: Neither a device identifier nor target areas are
-                included in the request.
+              description: An identifier is not included in the request and the
+                device or phone number identification cannot be derived from the
+                3-legged access token
               value:
                 status: 422
                 code: MISSING_IDENTIFIER
-                message: The device or target areas must be provided.
+                message: The device cannot be identified.
             GENERIC_422_UNSUPPORTED_IDENTIFIER:
               description: None of the provided identifiers is
                 supported by the implementation
@@ -1176,6 +1235,11 @@ components:
                 code: TOO_MANY_REQUESTS
                 message: Rate limit reached.
   examples:
+    IdentifyDeviceBy3LeggedToken:
+      description: Empty JSON when device is identified by access token
+      value:
+        applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
+
     IdentifyDeviceByPhoneNumber:
       description: Identifying device by phone number
       value:
@@ -1206,7 +1270,7 @@ components:
     PreDeploymentPlanningRequest:
       description: |
         Discover viable edge cloud zones for a cloud gaming application profile
-        before deployment using the optimal edge discovery operation.
+        before deployment using the viability discovery operation.
       value:
         targetAreas:
           - area:
@@ -1262,6 +1326,11 @@ components:
             edgeCloudProvider: "EdgeCo Neutral Host"
             edgeCloudRegion: "gr-west-1"
             edgeCloudZoneStatus: active
+          - edgeCloudZoneId: "a785db91-462a-40c6-b963-fdc98940f255"
+            edgeCloudZoneName: "GR West Zone B"
+            edgeCloudProvider: "EdgeCo Neutral Host"
+            edgeCloudRegion: "gr-west-1"
+            edgeCloudZoneStatus: active
         areaResults:
           - targetArea:
               area:
@@ -1271,12 +1340,7 @@ components:
                   longitude: 21.7346
                 radius: 5000
             edgeCloudZoneViabilities:
-              - edgeCloudZone:
-                  edgeCloudZoneId: "4f7b5555-6457-4890-9d4e-1dc79f44ab66"
-                  edgeCloudZoneName: "GR West Zone A"
-                  edgeCloudProvider: "EdgeCo Neutral Host"
-                  edgeCloudRegion: "gr-west-1"
-                  edgeCloudZoneStatus: active
+              - edgeCloudZoneId: "4f7b5555-6457-4890-9d4e-1dc79f44ab66"
                 viability: VIABLE
                 networkOperatorPlanningInfo:
                   planningClasses:
@@ -1285,12 +1349,7 @@ components:
                   latencyEstimate:
                     p50LatencyMs: 8
                     p95LatencyMs: 14
-              - edgeCloudZone:
-                  edgeCloudZoneId: "a785db91-462a-40c6-b963-fdc98940f255"
-                  edgeCloudZoneName: "GR West Zone B"
-                  edgeCloudProvider: "EdgeCo Neutral Host"
-                  edgeCloudRegion: "gr-west-1"
-                  edgeCloudZoneStatus: active
+              - edgeCloudZoneId: "a785db91-462a-40c6-b963-fdc98940f255"
                 viability: CONDITIONALLY_VIABLE
                 conditionInfo:
                   conditionType: SERVICE_ACTIVATION_REQUIRED
@@ -1317,7 +1376,12 @@ components:
       value:
         applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
         validUntil: "2026-05-19T12:15:00Z"
-        edgeCloudZones: []
+        edgeCloudZones:
+          - edgeCloudZoneId: "dc10c463-d604-4f2f-a002-c1199de12d6f"
+            edgeCloudZoneName: "GR West Zone C"
+            edgeCloudProvider: "EdgeCo Neutral Host"
+            edgeCloudRegion: "gr-west-1"
+            edgeCloudZoneStatus: active
         areaResults:
           - targetArea:
               area:
@@ -1327,12 +1391,7 @@ components:
                   longitude: 21.7346
                 radius: 5000
             edgeCloudZoneViabilities:
-              - edgeCloudZone:
-                  edgeCloudZoneId: "dc10c463-d604-4f2f-a002-c1199de12d6f"
-                  edgeCloudZoneName: "GR West Zone C"
-                  edgeCloudProvider: "EdgeCo Neutral Host"
-                  edgeCloudRegion: "gr-west-1"
-                  edgeCloudZoneStatus: active
+              - edgeCloudZoneId: "dc10c463-d604-4f2f-a002-c1199de12d6f"
                 viability: NOT_VIABLE
                 viabilityReason: "The requested application profile requirements cannot be met for this target area."
                 estimatedMetrics:

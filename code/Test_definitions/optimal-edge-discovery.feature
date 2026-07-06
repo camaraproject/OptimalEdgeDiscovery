@@ -48,15 +48,15 @@ Feature: CAMARA Optimal Edge Discovery API, vwip - Operations for discovering op
     And the response body complies with the OAS schema at "/components/schemas/EdgeDiscoveryResponse"
     And the response contains filtered Edge Cloud Zones matching the specified parameters
 
-  @optimal_edge_discovery_04_discover_predeployment_edge_zones
-  Scenario: Discover viable Edge Cloud Zones for pre-deployment planning
+  @optimal_edge_discovery_04_retrieve_viable_edge_cloud_zones
+  Scenario: Retrieve viable Edge Cloud Zones for pre-deployment planning
     Given a valid applicationProfileId is provided
     And valid target areas are provided
     And valid planning criteria for edge discovery are provided
-    When the request "discoverOptimalEdge" is sent with the applicationProfileId, target areas and planning criteria
+    When the request "retrieveViableEdgeCloudZones" is sent with the applicationProfileId, target areas and planning criteria
     Then the response code is 200
     And the response header "Content-Type" is "application/json"
-    And the response body complies with the OAS schema at "/components/schemas/EdgeDiscoveryResponse"
+    And the response body complies with the OAS schema at "/components/schemas/PreDeploymentEdgeDiscoveryResponse"
     And the response contains area-specific Edge Cloud Zone viability results
 
 ######### Error Scenarios #################################
