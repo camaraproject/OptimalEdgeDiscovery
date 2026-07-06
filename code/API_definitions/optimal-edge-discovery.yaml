@@ -46,13 +46,6 @@ info:
         user session exists. This can be achieved using the
         `/retrieve-viable-edge-cloud-zones` API.
 
-    The pre-deployment operation is planning-oriented. It returns planning
-    estimates only and does not provide runtime steering, traffic-routing
-    instructions, or guarantees about future network performance. The API
-    intentionally exposes only public planning abstractions and does not expose
-    UPF, DNN, S-NSSAI, routing policy, topology, or other internal operator
-    details.
-
     To call these endpoints, the API consumer must first obtain a valid OAuth2 token
     from the token endpoint, and pass it as an `Authorization` header in the API
     request.
@@ -102,13 +95,14 @@ info:
 
     ## Error handling:
 
-    - If the subject cannot be identified from the access token and the
-    optional `device` object is not included in the request, then the server
-    will return an error with the `422 MISSING_IDENTIFIER` error code.
+    - If the subject cannot be identified from the access token and the optional `device`
+    object is not included in the request, then the server will return an error with the
+    `422 MISSING_IDENTIFIER` error code.
 
-    - If the subject can be identified from the access token and the optional
-    `device` object is also included in the request, then the server will
-    return an error with the `422 UNNECESSARY_IDENTIFIER` error code.
+    - If the subject can be identified from the access token and the optional `device`
+    object is also included in the request, then the server will return an error with the
+    `422 UNNECESSARY_IDENTIFIER` error code. This will be the case even if the same device
+    is identified by these two methods, as the server is unable to make this comparison.
 
     # Responses
 
@@ -163,12 +157,6 @@ info:
     If the device was identified from the access token, the `device` object
     will not be present in the response, and the `applicationProfileId` will
     be the only field returned.
-
-    For pre-deployment planning, the API consumer can use
-    `/retrieve-viable-edge-cloud-zones` with `targetAreas` instead of a device
-    identifier. The response can include `areaResults` with planning viability,
-    served target areas, abstract planning classes, and estimated metrics for
-    candidate edge cloud zones.
 
     ## Errors
 
@@ -255,9 +243,8 @@ tags:
     description: |
       Discover the regions and zones in the edge cloud
       application, find optimal edge cloud zones for
-      your deployed applications, optimal Application
-      Endpoints for your clients to connect to, and viable
-      edge cloud zone candidates for pre-deployment planning.
+      your deployed applications, and optimal
+      Application Endpoints for your clients to connect to.
 ############################################################################
 #                                     Paths                                #
 ############################################################################
@@ -409,11 +396,6 @@ paths:
         Evaluates which edge cloud zones known to the API Publisher are viable
         candidates for target geographic areas and an application profile
         before deployment.
-
-        The operation does not require an active device and does not return
-        runtime steering, routing, topology, UPF, DNN, S-NSSAI, or other
-        operator-internal details. Estimated metrics are planning indicators
-        only and must not be interpreted as runtime guarantees.
 
 components:
   securitySchemes:
