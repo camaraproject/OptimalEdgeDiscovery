@@ -48,9 +48,20 @@ Feature: CAMARA Optimal Edge Discovery API, vwip - Operations for discovering op
     And the response body complies with the OAS schema at "/components/schemas/EdgeDiscoveryResponse"
     And the response contains filtered Edge Cloud Zones matching the specified parameters
 
+  @optimal_edge_discovery_04_retrieve_viable_edge_cloud_zones
+  Scenario: Retrieve viable Edge Cloud Zones for pre-deployment planning
+    Given a valid applicationProfileId is provided
+    And valid target areas are provided
+    And valid planning criteria for edge discovery are provided
+    When the request "retrieveViableEdgeCloudZones" is sent with the applicationProfileId, target areas and planning criteria
+    Then the response code is 200
+    And the response header "Content-Type" is "application/json"
+    And the response body complies with the OAS schema at "/components/schemas/PreDeploymentEdgeDiscoveryResponse"
+    And the response contains area-specific Edge Cloud Zone viability results
+
 ######### Error Scenarios #################################
 
-  @optimal_edge_discovery_04_discover_edge_no_results
+  @optimal_edge_discovery_05_discover_edge_no_results
   Scenario: Discover Edge Cloud Zone with no matching results
     Given a valid device identifier in the system
     And a valid applicationProfileId is provided
@@ -61,7 +72,7 @@ Feature: CAMARA Optimal Edge Discovery API, vwip - Operations for discovering op
     And the response body complies with the OAS schema at "/components/schemas/ErrorInfo"
     And the response property "$.code" is "NOT_FOUND"
 
-  @optimal_edge_discovery_05_get_regions_unauthenticated
+  @optimal_edge_discovery_06_get_regions_unauthenticated
   Scenario: Get regions without authentication
     Given the header "Authorization" is not present
     When the request "getRegions" is sent
@@ -70,7 +81,7 @@ Feature: CAMARA Optimal Edge Discovery API, vwip - Operations for discovering op
     And the response body complies with the OAS schema at "/components/schemas/ErrorInfo"
     And the response property "$.code" is "UNAUTHENTICATED"
 
-  @optimal_edge_discovery_06_invalid_device_identifier
+  @optimal_edge_discovery_07_invalid_device_identifier
   Scenario: Discover optimal Edge Cloud Zone with invalid device identifier
     Given an invalid device identifier
     And a valid applicationProfileId is provided
@@ -80,7 +91,7 @@ Feature: CAMARA Optimal Edge Discovery API, vwip - Operations for discovering op
     And the response body complies with the OAS schema at "/components/schemas/ErrorInfo"
     And the response property "$.code" is "INVALID_ARGUMENT"
 
-  @optimal_edge_discovery_07_device_not_found
+  @optimal_edge_discovery_08_device_not_found
   Scenario: Discover optimal Edge Cloud Zone with non-existing device
     Given a non-existing device identifier
     And a valid applicationProfileId is provided
@@ -90,7 +101,7 @@ Feature: CAMARA Optimal Edge Discovery API, vwip - Operations for discovering op
     And the response body complies with the OAS schema at "/components/schemas/ErrorInfo"
     And the response property "$.code" is "IDENTIFIER_NOT_FOUND"
 
-  @optimal_edge_discovery_08_invalid_filter
+  @optimal_edge_discovery_09_invalid_filter
   Scenario: Discover optimal Edge Cloud Zone with invalid filter parameters
     Given a valid device identifier in the system
     And a valid applicationProfileId is provided
@@ -101,7 +112,7 @@ Feature: CAMARA Optimal Edge Discovery API, vwip - Operations for discovering op
     And the response body complies with the OAS schema at "/components/schemas/ErrorInfo"
     And the response property "$.code" is "INVALID_ARGUMENT"
 
-  @optimal_edge_discovery_09_unauthenticated
+  @optimal_edge_discovery_10_unauthenticated
   Scenario: Discover optimal Edge Cloud Zone without authentication
     Given a valid device identifier in the system
     And the header "Authorization" is not present

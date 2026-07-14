@@ -40,6 +40,12 @@ info:
         region. This can be achieved using the
         `/retrieve-optimal-edge-cloud-zones` API.
 
+    - **Pre-deployment Edge Cloud Zone Viability Discovery**: To evaluate which
+        edge cloud zones known to the API Publisher are viable candidates for
+        target areas and an application profile before any active device or
+        user session exists. This can be achieved using the
+        `/retrieve-viable-edge-cloud-zones` API.
+
     To call these endpoints, the API consumer must first obtain a valid OAuth2 token
     from the token endpoint, and pass it as an `Authorization` header in the API
     request.
@@ -333,6 +339,63 @@ paths:
          register your deployed application. You can choose to search without
          passing any of the inputs parameters or a combination of Application
          Profile and device information.
+  /retrieve-viable-edge-cloud-zones:
+    post:
+      operationId: retrieveViableEdgeCloudZones
+      security:
+        - openId:
+            - "optimal-edge-discovery:viable-edge-zones:read"
+      parameters:
+        - $ref: "#/components/parameters/x-correlator"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreDeploymentEdgeDiscoveryInfo"
+            examples:
+              Pre-deployment Planning By Target Areas:
+                $ref: "#/components/examples/PreDeploymentPlanningRequest"
+              Pre-deployment Planning Including Non-viable Candidates:
+                $ref: "#/components/examples/PreDeploymentPlanningWithNonViableRequest"
+
+      responses:
+        "200":
+          description: |
+            Returns edge cloud zone viability results for pre-deployment
+            planning. Results are estimates and are not runtime performance
+            guarantees.
+          headers:
+            x-correlator:
+              $ref: "#/components/headers/x-correlator"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreDeploymentEdgeDiscoveryResponse"
+              examples:
+                Pre-deployment Planning Results:
+                  $ref: "#/components/examples/PreDeploymentPlanningResponse"
+                Pre-deployment Planning Results Including Non-viable Candidates:
+                  $ref: "#/components/examples/PreDeploymentPlanningWithNonViableResponse"
+        "400":
+          $ref: "#/components/responses/Generic400"
+        "401":
+          $ref: "#/components/responses/Generic401"
+        "403":
+          $ref: "#/components/responses/Generic403"
+        "404":
+          $ref: "#/components/responses/Generic404"
+        "422":
+          $ref: "#/components/responses/Generic422"
+        "429":
+          $ref: "#/components/responses/Generic429"
+      tags:
+        - Discovery
+      summary: Retrieve viable edge cloud zones for pre-deployment planning
+      description: |
+        Evaluates which edge cloud zones known to the API Publisher are viable
+        candidates for target geographic areas and an application profile
+        before deployment.
 
 components:
   securitySchemes:
@@ -371,6 +434,43 @@ components:
           $ref: "#/components/schemas/ApplicationProfileId"
         device:
           $ref: "#/components/schemas/DeviceResponse"
+
+    PreDeploymentEdgeDiscoveryResponse:
+      type: object
+      description: |
+        Response for pre-deployment edge cloud zone viability discovery.
+        `edgeCloudZones` is the canonical list of candidate edge cloud zone
+        resources. Area-specific viability results reference candidates by
+        `edgeCloudZoneId` and contain only planning-specific assessment fields.
+      required:
+        - applicationProfileId
+        - edgeCloudZones
+        - areaResults
+        - validUntil
+      properties:
+        applicationProfileId:
+          $ref: "#/components/schemas/ApplicationProfileId"
+        edgeCloudZones:
+          description: |
+            Canonical list of edge cloud zone resources referenced by
+            `areaResults`.
+          type: array
+          items:
+            $ref: "#/components/schemas/EdgeCloudZone"
+        areaResults:
+          description: |
+            Area-specific planning results.
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/AreaEdgeCloudZoneViabilityResult"
+        validUntil:
+          description: |
+            Timestamp until which the API provider considers this planning
+            response fresh enough for pre-deployment decision making. This is
+            not a runtime availability guarantee, reservation, or SLA.
+          type: string
+          format: date-time
 
     EdgeCloudZone:
       type: object
@@ -466,6 +566,316 @@ components:
       required:
         - applicationProfileId
 
+    PreDeploymentEdgeDiscoveryInfo:
+      description: |
+        Request resource to retrieve viable edge cloud zones for
+        pre-deployment planning. The request is not associated with an active
+        device or session. Application network and compute requirements are
+        referenced through `applicationProfileId`; this request only describes
+        target areas and optional planning criteria.
+      type: object
+      required:
+        - applicationProfileId
+        - targetAreas
+      properties:
+        applicationProfileId:
+          $ref: "#/components/schemas/ApplicationProfileId"
+        targetAreas:
+          description: |
+            Target demand or service areas for which edge cloud zone viability
+            is evaluated before deployment.
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/TargetArea"
+        edgeCloudZoneCriteria:
+          $ref: "#/components/schemas/EdgeCloudZoneCriteria"
+        networkOperatorCriteria:
+          $ref: "#/components/schemas/NetworkOperatorCriteria"
+        maxResults:
+          description: Maximum number of planning results to return per target
+            area.
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+        includeNonViableCandidates:
+          description: |
+            Indicates whether results with `NOT_VIABLE` or `UNKNOWN` viability
+            can be included in planning results. When false, only `VIABLE` and
+            `CONDITIONALLY_VIABLE` results are returned.
+          type: boolean
+          default: false
+
+    AreaEdgeCloudZoneViabilityResult:
+      description: Viability results for a requested target area.
+      type: object
+      required:
+        - targetArea
+        - edgeCloudZoneViabilities
+      properties:
+        targetArea:
+          $ref: "#/components/schemas/TargetArea"
+        edgeCloudZoneViabilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/EdgeCloudZoneViability"
+
+    EdgeCloudZoneViability:
+      description: |
+        Planning result for one candidate edge cloud zone. This result is not
+        a runtime routing decision and does not expose operator-internal
+        topology or policy.
+      type: object
+      required:
+        - edgeCloudZoneId
+        - viability
+      properties:
+        edgeCloudZoneId:
+          $ref: "#/components/schemas/EdgeCloudZoneId"
+        viability:
+          type: string
+          description: |
+            Planning viability of the edge cloud zone for the requested target
+            area and application profile.
+          enum:
+            - VIABLE
+            - CONDITIONALLY_VIABLE
+            - NOT_VIABLE
+            - UNKNOWN
+        conditionInfo:
+          description: |
+            Additional condition details. This field is required by API
+            semantics when `viability` is `CONDITIONALLY_VIABLE` and should be
+            omitted for straightforward `VIABLE` results. OpenAPI 3.0 does not
+            enforce this conditional requirement cleanly.
+          allOf:
+            - $ref: "#/components/schemas/ConditionInfo"
+        viabilityReason:
+          description: |
+            Optional human-readable explanation for conditional, non-viable,
+            or unknown results. This field should be omitted for
+            straightforward `VIABLE` results.
+          type: string
+        networkOperatorPlanningInfo:
+          $ref: "#/components/schemas/NetworkOperatorPlanningInfo"
+        estimatedMetrics:
+          $ref: "#/components/schemas/EstimatedMetrics"
+
+    ConditionInfo:
+      description: |
+        Additional information for a `CONDITIONALLY_VIABLE` result.
+      type: object
+      required:
+        - conditionType
+        - expectedActivationDelay
+        - description
+      properties:
+        conditionType:
+          description: Type of condition that must be satisfied.
+          type: string
+          enum:
+            - CAPACITY_EXPANSION_REQUIRED
+            - MANUAL_APPROVAL_REQUIRED
+            - SERVICE_ACTIVATION_REQUIRED
+            - OTHER
+        expectedActivationDelay:
+          description: Expected time before the edge cloud zone can become viable.
+          type: string
+          format: duration
+          example: "PT1H"
+        description:
+          description: Human-readable description of the condition.
+          type: string
+
+    EdgeCloudZoneCriteria:
+      description: Optional edge-cloud-zone candidate criteria.
+      type: object
+      properties:
+        edgeCloudRegion:
+          $ref: "#/components/schemas/EdgeCloudRegion"
+        edgeCloudProviders:
+          description: |
+            Edge cloud providers to include as candidate providers. This is a
+            provider-level planning filter and is not a network routing policy.
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/EdgeCloudProvider"
+      minProperties: 1
+
+    NetworkOperatorCriteria:
+      description: |
+        Optional broad network-operator-side planning criteria. This object
+        must not contain routing, topology, UPF, DNN, S-NSSAI, or policy
+        details.
+      type: object
+      properties:
+        planningClasses:
+          description: |
+            Broad non-sensitive planning classes to consider. These values are
+            not contract terms, prices, quotes, SLAs, or commercial commitments.
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/PlanningClass"
+      minProperties: 1
+
+    NetworkOperatorPlanningInfo:
+      description: |
+        Broad non-sensitive network-operator-side planning information
+        associated with a candidate edge cloud zone. This is not a contract,
+        price, quote, SLA, or commercial commitment.
+      type: object
+      properties:
+        planningClasses:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/PlanningClass"
+
+    PlanningClass:
+      description: Broad non-sensitive network-operator planning class.
+      type: string
+      enum:
+        - STANDARD
+        - PREMIUM
+        - ENTERPRISE
+        - UNKNOWN
+
+    TargetArea:
+      description: |
+        Target demand or service area for pre-deployment planning.
+        The area is expressed as explicit geographic geometry to avoid relying on
+        provider-specific area identifiers.
+      type: object
+      required:
+        - area
+      properties:
+        area:
+          $ref: "#/components/schemas/Area"
+
+    Area:
+      type: object
+      description: |
+        Geographic area used for pre-deployment planning. This follows the
+        CAMARA pattern used by location/region APIs, where an area is expressed
+        using explicit geometry.
+      required:
+        - areaType
+      properties:
+        areaType:
+          $ref: "#/components/schemas/AreaType"
+      discriminator:
+        propertyName: areaType
+        mapping:
+          CIRCLE: "#/components/schemas/Circle"
+          POLYGON: "#/components/schemas/Polygon"
+
+    AreaType:
+      type: string
+      description: |
+        Type of geographic area.
+        CIRCLE - Area defined by a center point and radius.
+        POLYGON - Area defined by a polygon boundary.
+      enum:
+        - CIRCLE
+        - POLYGON
+
+    Circle:
+      description: Circular geographic area.
+      allOf:
+        - $ref: "#/components/schemas/Area"
+        - type: object
+          required:
+            - center
+            - radius
+          properties:
+            center:
+              $ref: "#/components/schemas/Point"
+            radius:
+              type: number
+              description: Radius in meters from the center point.
+              minimum: 1
+          example:
+            areaType: CIRCLE
+            center:
+              latitude: 38.2466
+              longitude: 21.7346
+            radius: 5000
+
+    Polygon:
+      description: Polygon geographic area.
+      allOf:
+        - $ref: "#/components/schemas/Area"
+        - type: object
+          required:
+            - boundary
+          properties:
+            boundary:
+              $ref: "#/components/schemas/PointList"
+
+    PointList:
+      type: array
+      description: List of points defining a polygon boundary.
+      minItems: 3
+      maxItems: 15
+      items:
+        $ref: "#/components/schemas/Point"
+
+    Point:
+      type: object
+      description: Coordinates defining a location.
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          $ref: "#/components/schemas/Latitude"
+        longitude:
+          $ref: "#/components/schemas/Longitude"
+      example:
+        latitude: 38.2466
+        longitude: 21.7346
+
+    Latitude:
+      description: Latitude component of a location.
+      type: number
+      format: double
+      minimum: -90
+      maximum: 90
+      example: 38.2466
+
+    Longitude:
+      description: Longitude component of a location.
+      type: number
+      format: double
+      minimum: -180
+      maximum: 180
+      example: 21.7346
+
+    EstimatedMetrics:
+      description: Planning metrics estimated for the candidate edge cloud zone.
+      type: object
+      properties:
+        latencyEstimate:
+          $ref: "#/components/schemas/LatencyEstimate"
+      minProperties: 1
+
+    LatencyEstimate:
+      description: |
+        Estimated latency values for pre-deployment planning. These values are
+        not runtime guarantees.
+      type: object
+      properties:
+        p50LatencyMs:
+          type: integer
+          minimum: 0
+          example: 8
+        p95LatencyMs:
+          type: integer
+          minimum: 0
+          example: 14
 
     DeviceResponse:
       description: |
@@ -838,3 +1248,135 @@ components:
             publicAddress: "84.125.93.10"
             publicPort: 59765
           networkAccessIdentifier: "123456789@domain.com"
+
+    PreDeploymentPlanningRequest:
+      description: |
+        Discover viable edge cloud zones for a cloud gaming application profile
+        before deployment using the viability discovery operation.
+      value:
+        targetAreas:
+          - area:
+              areaType: CIRCLE
+              center:
+                latitude: 38.2466
+                longitude: 21.7346
+              radius: 5000
+          - area:
+              areaType: CIRCLE
+              center:
+                latitude: 37.9838
+                longitude: 23.7275
+              radius: 10000
+        applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
+        edgeCloudZoneCriteria:
+          edgeCloudRegion: "gr-west-1"
+          edgeCloudProviders:
+            - "EdgeCo Neutral Host"
+        networkOperatorCriteria:
+          planningClasses:
+            - STANDARD
+            - PREMIUM
+        maxResults: 4
+        includeNonViableCandidates: false
+
+    PreDeploymentPlanningWithNonViableRequest:
+      description: |
+        Discover edge cloud zone candidates and include non-viable or unknown
+        planning results.
+      value:
+        targetAreas:
+          - area:
+              areaType: CIRCLE
+              center:
+                latitude: 38.2466
+                longitude: 21.7346
+              radius: 5000
+        applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
+        edgeCloudZoneCriteria:
+          edgeCloudRegion: "gr-west-1"
+        maxResults: 4
+        includeNonViableCandidates: true
+
+    PreDeploymentPlanningResponse:
+      description: Viable edge cloud zone planning response.
+      value:
+        applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
+        validUntil: "2026-05-19T12:15:00Z"
+        edgeCloudZones:
+          - edgeCloudZoneId: "4f7b5555-6457-4890-9d4e-1dc79f44ab66"
+            edgeCloudZoneName: "GR West Zone A"
+            edgeCloudProvider: "EdgeCo Neutral Host"
+            edgeCloudRegion: "gr-west-1"
+            edgeCloudZoneStatus: active
+          - edgeCloudZoneId: "a785db91-462a-40c6-b963-fdc98940f255"
+            edgeCloudZoneName: "GR West Zone B"
+            edgeCloudProvider: "EdgeCo Neutral Host"
+            edgeCloudRegion: "gr-west-1"
+            edgeCloudZoneStatus: active
+        areaResults:
+          - targetArea:
+              area:
+                areaType: CIRCLE
+                center:
+                  latitude: 38.2466
+                  longitude: 21.7346
+                radius: 5000
+            edgeCloudZoneViabilities:
+              - edgeCloudZoneId: "4f7b5555-6457-4890-9d4e-1dc79f44ab66"
+                viability: VIABLE
+                networkOperatorPlanningInfo:
+                  planningClasses:
+                    - PREMIUM
+                estimatedMetrics:
+                  latencyEstimate:
+                    p50LatencyMs: 8
+                    p95LatencyMs: 14
+              - edgeCloudZoneId: "a785db91-462a-40c6-b963-fdc98940f255"
+                viability: CONDITIONALLY_VIABLE
+                conditionInfo:
+                  conditionType: SERVICE_ACTIVATION_REQUIRED
+                  expectedActivationDelay: "PT1H"
+                  description: "Service activation is required before deployment."
+                networkOperatorPlanningInfo:
+                  planningClasses:
+                    - STANDARD
+                estimatedMetrics:
+                  latencyEstimate:
+                    p50LatencyMs: 11
+                    p95LatencyMs: 18
+          - targetArea:
+              area:
+                areaType: CIRCLE
+                center:
+                  latitude: 37.9838
+                  longitude: 23.7275
+                radius: 10000
+            edgeCloudZoneViabilities: []
+
+    PreDeploymentPlanningWithNonViableResponse:
+      description: Planning response including a non-viable candidate.
+      value:
+        applicationProfileId: "2fa85f64-5717-4562-b3fc-2c963f66afa0"
+        validUntil: "2026-05-19T12:15:00Z"
+        edgeCloudZones:
+          - edgeCloudZoneId: "dc10c463-d604-4f2f-a002-c1199de12d6f"
+            edgeCloudZoneName: "GR West Zone C"
+            edgeCloudProvider: "EdgeCo Neutral Host"
+            edgeCloudRegion: "gr-west-1"
+            edgeCloudZoneStatus: active
+        areaResults:
+          - targetArea:
+              area:
+                areaType: CIRCLE
+                center:
+                  latitude: 38.2466
+                  longitude: 21.7346
+                radius: 5000
+            edgeCloudZoneViabilities:
+              - edgeCloudZoneId: "dc10c463-d604-4f2f-a002-c1199de12d6f"
+                viability: NOT_VIABLE
+                viabilityReason: "The requested application profile requirements cannot be met for this target area."
+                estimatedMetrics:
+                  latencyEstimate:
+                    p50LatencyMs: 35
+                    p95LatencyMs: 65
