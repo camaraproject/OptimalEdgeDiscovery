@@ -71,7 +71,8 @@ Changes documented below are compared to version 0.1.0.
 
 ### Breaking changes
 
-* N/A
+* Renamed field `status` to `edgeCloudZoneStatus` in the `EdgeCloudZone` schema by @DLondonoD in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/29
+  * API consumers reading `$.edgeCloudZones[*].status` must update to `$.edgeCloudZones[*].edgeCloudZoneStatus`
 
 ### Added
 
@@ -79,7 +80,11 @@ Changes documented below are compared to version 0.1.0.
 
 ### Changed
 
-* N/A
+* Renamed field `status` to `edgeCloudZoneStatus` in the `EdgeCloudZone` schema for consistency with the Edge Cloud API family data model by @DLondonoD in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/29
+* Aligned the API with CAMARA Commonalities r4.3 (0.8.0) by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/46
+  * Common definitions reused via `$ref` into `CAMARA_common.yaml` (`openId`, `x-correlator`, `Device`, `DeviceResponse`, `ErrorInfo`, and all generic error responses)
+  * Added the mandatory `info.description` sections (authorization and authentication, additional error responses, request body strictness, identifying device from access token)
+  * Added `maxLength` and `pattern` constraints to string fields and `maxItems: 20` to the `/regions` response array and `edgeCloudZones` property
 
 ### Fixed
 
