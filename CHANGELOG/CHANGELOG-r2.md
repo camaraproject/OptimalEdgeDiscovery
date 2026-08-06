@@ -73,6 +73,8 @@ Changes documented below are compared to version 0.1.0.
 
 * Renamed field `status` to `edgeCloudZoneStatus` in the `EdgeCloudZone` schema by @DLondonoD in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/29
   * API consumers reading `$.edgeCloudZones[*].status` must update to `$.edgeCloudZones[*].edgeCloudZoneStatus`
+* `edgeCloudZoneStatus` enum value `unknown` removed — consumers handling `unknown` must update; providers must now always return `active` or `inactive` by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/47
+* `edgeCloudZoneStatus` and `edgeCloudRegion` are now required fields in the `EdgeCloudZone` response schema — providers must always populate these fields by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/47
 
 ### Added
 
@@ -81,6 +83,9 @@ Changes documented below are compared to version 0.1.0.
 ### Changed
 
 * Renamed field `status` to `edgeCloudZoneStatus` in the `EdgeCloudZone` schema for consistency with the Edge Cloud API family data model by @DLondonoD in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/29
+* `edgeCloudZoneStatus` enum value `unknown` removed by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/47 (see Breaking changes)
+* `edgeCloudZoneStatus` and `edgeCloudRegion` made required fields in the `EdgeCloudZone` response schema by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/47 (see Breaking changes)
+* `edgeCloudZones` response array is now documented as ordered from best to worst suitability by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/47
 * Aligned the API with CAMARA Commonalities r4.3 (0.8.0) by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/46
   * Common definitions reused via `$ref` into `CAMARA_common.yaml` (`openId`, `x-correlator`, `Device`, `DeviceResponse`, `ErrorInfo`, and all generic error responses)
   * Added the mandatory `info.description` sections (authorization and authentication, additional error responses, request body strictness, identifying device from access token)
@@ -88,7 +93,10 @@ Changes documented below are compared to version 0.1.0.
 
 ### Fixed
 
-* N/A
+* Added missing `x-correlator` response header to `GET /regions` 200 response by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/47
+* Removed inapplicable error response codes from `GET /regions` (404, 422, 429) and `INVALID_TOKEN_CONTEXT` from both endpoints by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/47
+* Fixed incorrect `404 NOT_FOUND` reference in `info.description` — corrected to `404 IDENTIFIER_NOT_FOUND` by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/47
+* Fixed incorrect POST endpoint description stating `applicationProfileId` was optional by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/47
 
 ### Removed
 

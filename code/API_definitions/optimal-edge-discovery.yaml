@@ -115,11 +115,11 @@ info:
     the Edge Cloud Zone.
     * `edgeCloudRegion` is the region of the closest Edge Cloud Zone to
     the user device.
-    * `edgeCloudZoneStatus` is the status of the Edge Cloud Zone (default is 'unknown').
-    * `edgeCloudZones` is an array of Edge Cloud Zones that match the query
-    parameters. The array will contain at least one Edge Cloud Zone, and
-    may contain multiple Edge Cloud Zones if there are multiple zones that
-    match the query parameters.
+    * `edgeCloudZoneStatus` is the operational status of the Edge Cloud Zone (`active` or `inactive`).
+    * `edgeCloudZones` is an ordered array of Edge Cloud Zones that match
+    the query parameters, ranked from best to worst suitability. All zones
+    in the list meet the application requirements; the first entry is the
+    most optimal choice for the given device and application profile.
     * `applicationProfileId` is the reference ID associated with the
     application profile. This is a UUID that identifies the application
     profile for which the Edge Cloud Zones are being discovered.
@@ -146,17 +146,10 @@ info:
     INVALID_ARGUMENT` error is returned.
 
     If the mobile subscription cannot be identified from the provided
-    parameters, a `404 NOT_FOUND` error is returned.
+    parameters, a `404 IDENTIFIER_NOT_FOUND` error is returned.
 
     Any more general service failures will result in an error in the `5xx`range
     with an explanation.
-
-    # Notes for Optimal Edge Discovery API publishers
-
-    Should your implementation require the `Port` value to be passed in addition
-    to the `IP-Address`, please make that explicit in the documentation, and
-    utilise the `GENERIC_400_MISSING_PORT` error if the `Port` header is
-    omitted.
 
     <!-- CAMARA:MANDATORY:additional-error-responses:BEGIN -->
     # Additional CAMARA error responses
@@ -218,6 +211,9 @@ paths:
       responses:
         '200':
           description: Returns Edge Cloud Regions
+          headers:
+            x-correlator:
+              $ref: '#/components/headers/x-correlator'
           content:
             application/json:
               schema:
@@ -226,18 +222,10 @@ paths:
                 maxItems: 20
                 items:
                   $ref: '#/components/schemas/EdgeCloudRegion'
-        '400':
-          $ref: '#/components/responses/Generic400'
         '401':
           $ref: '#/components/responses/Generic401'
         '403':
           $ref: '#/components/responses/Generic403'
-        '404':
-          $ref: '#/components/responses/Generic404'
-        '422':
-          $ref: '#/components/responses/Generic422'
-        '429':
-          $ref: '#/components/responses/Generic429'
       tags:
         - Regions
       description: |
@@ -276,6 +264,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EdgeDiscoveryResponse'
+              examples:
+                OptimalZonesForDevice:
+                  summary: Ranked edge cloud zones for a device in the northeastern US
+                  value:
+                    edgeCloudZones:
+                      - edgeCloudZoneId: 4gt079b5-6248-4e4b-b0a7-a5dc15638de6
+                        edgeCloudZoneName: AWS Wavelength Zone - Verizon Boston
+                        edgeCloudProvider: Amazon Web Services
+                        edgeCloudRegion: us-east-1
+                        edgeCloudZoneStatus: active
+                      - edgeCloudZoneId: 7ab123cd-9087-6543-ef12-3dc45f67gh89
+                        edgeCloudZoneName: AWS Wavelength Zone - Verizon New York
+                        edgeCloudProvider: Amazon Web Services
+                        edgeCloudRegion: us-east-1
+                        edgeCloudZoneStatus: active
+                    applicationProfileId: 2fa85f64-5717-4562-b3fc-2c963f66afa0
+                    device:
+                      phoneNumber: '+12015550123'
         '400':
           $ref: '#/components/responses/Generic400'
         '401':
@@ -291,7 +297,7 @@ paths:
       tags:
         - Discovery
       summary: Discover optimal edge cloud zones for deployed applications
-      description: Returns a list of optimal edge cloud zones where you can register your deployed application. You can choose to search without passing any of the inputs parameters or a combination of Application Profile and device information.
+      description: Returns a list of optimal edge cloud zones where you can register your deployed application. The `applicationProfileId` is required; optionally, device information and a preferred `edgeCloudRegion` may also be specified.
 components:
   securitySchemes:
     openId:
@@ -321,7 +327,11 @@ components:
           type: array
           maxItems: 20
           minItems: 1
-          description: List of optimal edge cloud zones matching the query parameters.
+          description: |
+            List of optimal edge cloud zones matching the query parameters,
+            ordered from best to worst suitability for the given device and
+            application profile. All zones in the list meet the application
+            requirements; the first entry is the most optimal.
           items:
             $ref: '#/components/schemas/EdgeCloudZone'
         applicationProfileId:
@@ -346,6 +356,8 @@ components:
         - edgeCloudZoneId
         - edgeCloudZoneName
         - edgeCloudProvider
+        - edgeCloudRegion
+        - edgeCloudZoneStatus
     ApplicationProfileId:
       type: string
       format: uuid
@@ -372,20 +384,19 @@ components:
       maxLength: 64
       pattern: ^[^\r\n]*$
     EdgeCloudRegion:
-      description: |
-        The common name of the closest Edge Cloud Zone to the user device.
+      description: An identifier for an edge cloud region.
       type: string
       maxLength: 64
       pattern: ^[A-Za-z0-9-]+$
-      example: us-west-1
+      example: us-east-1
     EdgeCloudZoneStatus:
-      description: Status of the Edge Cloud Zone (default is 'unknown')
+      description: |
+        Operational status of the Edge Cloud Zone. API providers must
+        always return an explicit status value.
       type: string
       enum:
         - active
         - inactive
-        - unknown
-      default: unknown
     OptimalEdgeDiscoveryInfo:
       description: |
         Resource to obtain the optimal edge cloud zone for a given application
@@ -594,7 +605,6 @@ components:
                   code:
                     enum:
                       - PERMISSION_DENIED
-                      - INVALID_TOKEN_CONTEXT
           examples:
             GENERIC_403_PERMISSION_DENIED:
               description: Permission denied. OAuth2 token access does not have the required scope or when the user fails operational security
@@ -602,12 +612,6 @@ components:
                 status: 403
                 code: PERMISSION_DENIED
                 message: Client does not have sufficient permissions to perform this action.
-            GENERIC_403_INVALID_TOKEN_CONTEXT:
-              description: Reflect some inconsistency between information in some field of the API and the related OAuth2 Token
-              value:
-                status: 403
-                code: INVALID_TOKEN_CONTEXT
-                message: Request body is not consistent with access token.
     Generic404:
       description: Not found
       headers:
