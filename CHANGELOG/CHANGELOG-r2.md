@@ -72,7 +72,8 @@ Changes documented below are compared to version 0.1.0.
 
 ### Breaking changes
 
-* N/A
+* `status` field in `EdgeCloudZone` renamed to `edgeCloudZoneStatus` to align with the CAMARA Edge Cloud API naming convention by @DLondonoD in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/29
+* `EdgeCloudZoneStatus` enum: removed `unknown` value and `default: unknown` — API providers must always return an explicit status (`active` or `inactive`) by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/54
 
 ### Added
 
@@ -80,15 +81,24 @@ Changes documented below are compared to version 0.1.0.
 
 ### Changed
 
-* N/A
+* Aligned the API with CAMARA Commonalities r4.3 (0.8.0) by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/46
+  * Common definitions reused via `$ref` into `CAMARA_common.yaml` (`Device`, `DeviceResponse`, `Port`, `XCorrelator`, error responses)
+  * Added mandatory `info.description` sections (authorization and authentication, additional error responses, request body strictness, identifying device from access token)
+  * Added `maxLength`, `format`, and `pattern` constraints to string fields
+* `edgeCloudRegion` and `edgeCloudZoneStatus` are now required fields in the `EdgeCloudZone` response schema by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/54
+* `edgeCloudZones` array in the POST response is ordered from best to worst suitability for the given device and application profile by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/54
+* GET /regions: removed inapplicable `404`, `422`, and `429` error responses by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/54
+* POST /optimal-edge-discovery: corrected operation description to state that `applicationProfileId` is required by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/54
 
 ### Fixed
 
-* N/A
+* Added missing `x-correlator` response header to `GET /regions` 200 response by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/54
+* Fixed `info.description` error code reference from `404 NOT_FOUND` to `404 IDENTIFIER_NOT_FOUND` by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/54
+* Fixed POST 200 response example to use valid UUID values by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/54
 
 ### Removed
 
-* N/A
+* `unknown` value removed from `EdgeCloudZoneStatus` enum — also listed under Breaking changes by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/54
 
 **Full Changelog**: https://github.com/camaraproject/OptimalEdgeDiscovery/compare/r1.2...r2.1
 
