@@ -1,5 +1,5 @@
   @optimal_edge_discovery
-Feature: CAMARA Optimal Edge Discovery API, vwip - Operations getRegions and discoverOptimalEdge
+Feature: CAMARA Optimal Edge Discovery API, v0.2.0-rc.2 - Operations getRegions and discoverOptimalEdge
   # Input to be provided by the implementation to the tester
   #
   # Implementation indications:
@@ -17,7 +17,7 @@ Feature: CAMARA Optimal Edge Discovery API, vwip - Operations getRegions and dis
 
   Background: Common Optimal Edge Discovery setup
     Given an environment at "apiRoot"
-    And the resource "/optimal-edge-discovery/vwip" as base-url
+    And the resource "/optimal-edge-discovery/v0.2rc2" as base-url
     And the header "Content-Type" is set to "application/json"
     And the header "Authorization" is set to a valid access token
     And the header "x-correlator" complies with the schema at "#/components/schemas/XCorrelator"
