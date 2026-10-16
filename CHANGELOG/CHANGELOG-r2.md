@@ -58,23 +58,28 @@ Changes documented below are compared to version 0.2.0-rc.1.
 
 ### Breaking changes
 
-* N/A
+* Request body of POST /retrieve-optimal-edge-cloud-zones is now marked as required; `applicationProfileId` within it was already mandatory by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
 
 ### Added
 
-* N/A
+* Added test scenarios for the device identifier errors, `403 PERMISSION_DENIED`, `404 NOT_FOUND`, request body validation, and success cases for both operations by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
 
 ### Changed
 
-* N/A
+* Synced with CAMARA Commonalities r4.4 / 0.9.0: error responses aligned with the r4.4 response catalogue, `info.description` mandatory sections updated by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+* Request body of POST /retrieve-optimal-edge-cloud-zones is now marked as required; `applicationProfileId` within it was already mandatory by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+* Aligned test definitions with CAMARA r4.4 testing artifacts by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
 
 ### Fixed
 
-* N/A
+* Corrected the success response description: the response contains an ordered array of one or more Edge Cloud Zones, not a single zone by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+* Errors section of the API description now documents `403 PERMISSION_DENIED`, `404 NOT_FOUND` and the `422` device identifier errors by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+* Updated the note on multiple device identifiers to the current Commonalities wording: the API provider uses one of the identifiers without matching checks by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+* Corrected the request schema description (the device identifier is passed in the request body) and removed `networkAccessIdentifier` from the request example by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
 
 ### Removed
 
-* N/A
+* Removed `400 OUT_OF_RANGE` and `403 INVALID_TOKEN_CONTEXT` error codes, which are not applicable to this API by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
 
 **Full Changelog**: https://github.com/camaraproject/OptimalEdgeDiscovery/compare/r2.1...r2.2
 
