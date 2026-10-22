@@ -753,7 +753,9 @@ components:
         - area
       properties:
         area:
-          $ref: "#/components/schemas/Area"
+          oneOf:
+            - $ref: "#/components/schemas/Circle"
+            - $ref: "#/components/schemas/Polygon"
 
     Area:
       type: object
@@ -791,6 +793,10 @@ components:
             - center
             - radius
           properties:
+            areaType:
+              type: string
+              enum:
+                - CIRCLE
             center:
               $ref: "#/components/schemas/Point"
             radius:
@@ -812,6 +818,10 @@ components:
           required:
             - boundary
           properties:
+            areaType:
+              type: string
+              enum:
+                - POLYGON
             boundary:
               $ref: "#/components/schemas/PointList"
 

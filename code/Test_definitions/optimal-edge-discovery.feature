@@ -59,7 +59,39 @@ Feature: CAMARA Optimal Edge Discovery API, vwip - Operations for discovering op
     And the response body complies with the OAS schema at "/components/schemas/PreDeploymentEdgeDiscoveryResponse"
     And the response contains area-specific Edge Cloud Zone viability results
 
+  @optimal_edge_discovery_11_retrieve_viable_geometry
+  Scenario Outline: Retrieve viable Edge Cloud Zones using explicit geometry
+    Given a valid applicationProfileId is provided
+    And the target area geometry is <geometry>
+    When the request "retrieveViableEdgeCloudZones" is sent with the applicationProfileId and target areas
+    Then the response code is 200
+    And the response body complies with the OAS schema at "/components/schemas/PreDeploymentEdgeDiscoveryResponse"
+
+    Examples:
+      | geometry                                                                                                                                                          |
+      | {"areaType":"CIRCLE","center":{"latitude":38.2466,"longitude":21.7346},"radius":5000}                                                                                 |
+      | {"areaType":"POLYGON","boundary":[{"latitude":38.2466,"longitude":21.7346},{"latitude":38.3,"longitude":21.8},{"latitude":38.2,"longitude":21.9}]}                       |
+
 ######### Error Scenarios #################################
+
+  @optimal_edge_discovery_12_invalid_target_area_geometry
+  Scenario Outline: Reject missing or mismatched target area geometry
+    Given a valid applicationProfileId is provided
+    And the target area geometry is <geometry>
+    When the request "retrieveViableEdgeCloudZones" is sent with the applicationProfileId and target areas
+    Then the response code is 400
+    And the response header "Content-Type" is "application/json"
+    And the response body complies with the OAS schema at "/components/schemas/ErrorInfo"
+    And the response property "$.code" is "INVALID_ARGUMENT"
+
+    Examples:
+      | geometry                                                                                                                                                          |
+      | {"areaType":"CIRCLE"}                                                                                                                                              |
+      | {"areaType":"CIRCLE","radius":5000}                                                                                                                                |
+      | {"areaType":"CIRCLE","center":{"latitude":38.2466,"longitude":21.7346}}                                                                                               |
+      | {"areaType":"POLYGON"}                                                                                                                                             |
+      | {"areaType":"POLYGON","center":{"latitude":38.2466,"longitude":21.7346},"radius":5000}                                                                                |
+      | {"areaType":"CIRCLE","boundary":[{"latitude":38.2466,"longitude":21.7346},{"latitude":38.3,"longitude":21.8},{"latitude":38.2,"longitude":21.9}]}                        |
 
   @optimal_edge_discovery_05_discover_edge_no_results
   Scenario: Discover Edge Cloud Zone with no matching results
