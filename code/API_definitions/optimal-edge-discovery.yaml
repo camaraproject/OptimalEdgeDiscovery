@@ -156,8 +156,13 @@ info:
     If the mobile subscription cannot be identified from the provided
     parameters, a `404 IDENTIFIER_NOT_FOUND` error is returned.
 
-    If no Edge Cloud Zone matches the request, a `404 NOT_FOUND` error is
-    returned.
+    If the `applicationProfileId` does not identify an existing application
+    profile, or the `edgeCloudRegion` is not one of the regions returned by
+    `GET /regions`, a `404 NOT_FOUND` error is returned.
+
+    If no Edge Cloud Zone matches the request, including when the specified
+    `edgeCloudRegion` is returned by `GET /regions` but has no suitable Edge
+    Cloud Zone, the response contains an empty `edgeCloudZones` array.
 
     If the device cannot be identified from the access token and is not
     provided in the request, or is provided when the access token already
@@ -319,6 +324,13 @@ paths:
                     applicationProfileId: 2fa85f64-5717-4562-b3fc-2c963f66afa0
                     device:
                       phoneNumber: '+12015550123'
+                NoMatchingZones:
+                  summary: No Edge Cloud Zone matches the request
+                  value:
+                    edgeCloudZones: []
+                    applicationProfileId: 2fa85f64-5717-4562-b3fc-2c963f66afa0
+                    device:
+                      phoneNumber: '+12015550123'
         "400":
           $ref: "../common/CAMARA_common.yaml#/components/responses/BadRequest400"
         "401":
@@ -334,7 +346,7 @@ paths:
       tags:
         - Discovery
       summary: Discover optimal edge cloud zones for deployed applications
-      description: Returns a list of optimal edge cloud zones where you can register your deployed application. The `applicationProfileId` is required; optionally, device information and a preferred `edgeCloudRegion` may also be specified.
+      description: Returns a list of optimal edge cloud zones where you can register your deployed application. The `applicationProfileId` is required; optionally, device information and an `edgeCloudRegion` to restrict the results to that region may also be specified.
 
 components:
   securitySchemes:
@@ -356,12 +368,13 @@ components:
         edgeCloudZones:
           type: array
           maxItems: 20
-          minItems: 1
+          minItems: 0
           description: |
             List of optimal edge cloud zones matching the query parameters,
             ordered from best to worst suitability for the given device and
             application profile. All zones in the list meet the application
-            requirements; the first entry is the most optimal.
+            requirements; the first entry is the most optimal. The list is
+            empty if no Edge Cloud Zone matches the request.
           items:
             $ref: "#/components/schemas/EdgeCloudZone"
         applicationProfileId:
@@ -451,7 +464,11 @@ components:
         applicationProfileId:
           $ref: "#/components/schemas/ApplicationProfileId"
         edgeCloudRegion:
-          $ref: "#/components/schemas/EdgeCloudRegion"
+          allOf:
+            - $ref: "#/components/schemas/EdgeCloudRegion"
+          description: |
+            Restricts the results to Edge Cloud Zones in this region. Must be
+            one of the regions returned by `GET /regions`.
       required:
         - applicationProfileId
 
@@ -476,12 +493,18 @@ components:
                       - NOT_FOUND
                       - IDENTIFIER_NOT_FOUND
           examples:
-            OPTIMAL_EDGE_DISCOVERY_404_NO_EDGE_CLOUD_ZONE_FOUND:
-              description: No Edge Cloud Zone matches the request
+            OPTIMAL_EDGE_DISCOVERY_404_APPLICATION_PROFILE_NOT_FOUND:
+              description: The applicationProfileId does not identify an existing application profile
               value:
                 status: 404
                 code: NOT_FOUND
-                message: "No Edge Cloud Zone found matching the request."
+                message: "The specified application profile is not found."
+            OPTIMAL_EDGE_DISCOVERY_404_EDGE_CLOUD_REGION_NOT_FOUND:
+              description: The edgeCloudRegion does not identify an existing Edge Cloud Region
+              value:
+                status: 404
+                code: NOT_FOUND
+                message: "The specified Edge Cloud Region is not found."
             GENERIC_404_IDENTIFIER_NOT_FOUND:
               $ref: "../common/CAMARA_common.yaml#/components/examples/GENERIC_404_IDENTIFIER_NOT_FOUND"
     OptimalEdgeDiscoveryTooManyRequests429:
