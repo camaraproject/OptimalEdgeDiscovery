@@ -46,7 +46,7 @@ info:
 
     # Identifying the device
 
-    The API returns the closest Edge Cloud Zone to a given device, so that
+    The API returns the optimal Edge Cloud Zones for a given device, so that
     device needs to be identifiable by the network. This can be achieved either
     by passing one or more device identifiers in the request, or, from the
     three-legged access token where implemented by the operator.
@@ -93,9 +93,10 @@ info:
 
     ## Success
 
-    A JSON object is returned containing an ordered array of one or more Edge
-    Cloud Zones, the first entry being the most optimal. The HTTP status
-    code will be `200 OK`. An example response:
+    A JSON object is returned containing an ordered array of the Edge Cloud
+    Zones that match the request, the first entry being the most optimal. If
+    no Edge Cloud Zone matches, the array is empty. The HTTP status code will
+    be `200 OK`. An example response:
 
     ```
       {
@@ -115,12 +116,10 @@ info:
       }
     ```
     * `edgeCloudZoneId` is a UUID for the Edge Cloud Zone.
-    * `edgeCloudZoneName` is the common name of the closest Edge Cloud Zone to
-    the user device.
+    * `edgeCloudZoneName` is the common name of the Edge Cloud Zone.
     * `edgeCloudProvider` is the name of the operator or cloud provider of
     the Edge Cloud Zone.
-    * `edgeCloudRegion` is the region of the closest Edge Cloud Zone to
-    the user device.
+    * `edgeCloudRegion` is the region of the Edge Cloud Zone.
     * `edgeCloudZoneStatus` is the operational status of the Edge Cloud Zone (`active` or `inactive`).
     * `edgeCloudZones` is an ordered array of Edge Cloud Zones that match
     the query parameters, ranked from best to worst suitability. All zones
@@ -297,8 +296,7 @@ paths:
 
       responses:
         "200":
-          description: returns optimal edge cloud zone matching query
-            parameters
+          description: Returns the optimal Edge Cloud Zones matching the request
           headers:
             x-correlator:
               $ref: "#/components/headers/x-correlator"
@@ -451,9 +449,9 @@ components:
 
     OptimalEdgeDiscoveryInfo:
       description: |
-        Resource to obtain the optimal edge cloud zone for a given application
-        profile and device information. The API returns the closest Edge Cloud
-        Zone to a given device, so the device needs to be identifiable by the
+        Resource to obtain the optimal Edge Cloud Zones for a given application
+        profile and device information. The API returns the optimal Edge Cloud
+        Zones for a given device, so the device needs to be identifiable by the
         network. This can be achieved either by passing a device identifier in
         the request body, or, from the 3-legged access token where implemented
         by the operator.
