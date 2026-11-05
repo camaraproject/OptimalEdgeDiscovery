@@ -2,7 +2,7 @@ repository:
   repository_name: OptimalEdgeDiscovery
   release_tag: r2.2
   release_type: pre-release-rc
-  release_date: null
+  release_date: '2026-11-05T16:40:06Z'
   src_commit_sha: 4859df2a4b36441140e71aa76d316f114ab38eb0
 apis:
 - api_name: optimal-edge-discovery
