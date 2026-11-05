@@ -2,6 +2,7 @@
 
 <!-- TOC:START -->
 ## Table of Contents
+- [r2.2](#r22)
 - [r2.1](#r21)
 <!-- TOC:END -->
 
@@ -13,6 +14,63 @@ The below sections record the changes for each API version in each release as fo
 * for the first release-candidate, all changes since the last public release
 * for subsequent release-candidate(s), only the delta to the previous release-candidate
 * for a public release, the consolidated changes since the previous public release
+
+# r2.2
+
+## Release Notes
+
+This release candidate contains the definition and documentation of
+* optimal-edge-discovery 0.2.0-rc.2
+
+The API definition(s) are based on
+* Commonalities r4.4 (0.9.0)
+* Identity and Consent Management r4.2 (0.5.0)
+
+## optimal-edge-discovery 0.2.0-rc.2
+
+**optimal-edge-discovery 0.2.0-rc.2 is a release-candidate version of this API.**
+
+Changes documented below are compared to version 0.2.0-rc.1.
+
+- API definition **with inline documentation**:
+  - [View it on ReDoc](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/OptimalEdgeDiscovery/r2.2/code/API_definitions/optimal-edge-discovery.yaml&nocors)
+  - [View it on Swagger Editor](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/OptimalEdgeDiscovery/r2.2/code/API_definitions/optimal-edge-discovery.yaml)
+  - OpenAPI [YAML spec file](https://github.com/camaraproject/OptimalEdgeDiscovery/blob/r2.2/code/API_definitions/optimal-edge-discovery.yaml)
+
+### Breaking changes
+
+* Request body of POST /retrieve-optimal-edge-cloud-zones is now marked as required; `applicationProfileId` within it was already mandatory by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+* When no Edge Cloud Zone matches the request, POST /retrieve-optimal-edge-cloud-zones now returns `200` with an empty `edgeCloudZones` array instead of `404 NOT_FOUND` (`edgeCloudZones` now has `minItems: 0`) by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/67
+
+### Added
+
+* Added test scenarios for the device identifier errors, `403 PERMISSION_DENIED`, `404 NOT_FOUND`, request body validation, and success cases for both operations by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+* Added a `200` response example with an empty `edgeCloudZones` array, and `404 NOT_FOUND` examples for an unknown `applicationProfileId` and an unknown `edgeCloudRegion` by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/67
+* Added test scenarios for an `edgeCloudRegion` with no suitable Edge Cloud Zone (empty result), an unknown `edgeCloudRegion` (`404 NOT_FOUND`), and `429 TOO_MANY_REQUESTS` / `429 QUOTA_EXCEEDED` by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/67
+
+### Changed
+
+* Synced with CAMARA Commonalities r4.4 / 0.9.0: error responses aligned with the r4.4 response catalogue, `info.description` mandatory sections updated by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+* Request body of POST /retrieve-optimal-edge-cloud-zones is now marked as required; `applicationProfileId` within it was already mandatory by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+* When no Edge Cloud Zone matches the request, POST /retrieve-optimal-edge-cloud-zones now returns `200` with an empty `edgeCloudZones` array instead of `404 NOT_FOUND` (`edgeCloudZones` now has `minItems: 0`) by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/67
+* `404 NOT_FOUND` is returned when the `applicationProfileId` does not identify an existing application profile, or the `edgeCloudRegion` is not one of the regions returned by `GET /regions` by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/67
+* Clarified that `edgeCloudRegion` in the request restricts the results to Edge Cloud Zones in that region by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/67
+* Aligned test definitions with CAMARA r4.4 testing artifacts by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60 and https://github.com/camaraproject/OptimalEdgeDiscovery/pull/67
+
+### Fixed
+
+* Corrected the success response description: the response contains an ordered array of Edge Cloud Zones, not a single zone by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+* Errors section of the API description now documents `403 PERMISSION_DENIED`, `404 NOT_FOUND` and the `422` device identifier errors by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60 and https://github.com/camaraproject/OptimalEdgeDiscovery/pull/67
+* Updated the note on multiple device identifiers to the current Commonalities wording: the API provider uses one of the identifiers without matching checks by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+* Corrected the request schema description (the device identifier is passed in the request body) and removed `networkAccessIdentifier` from the request example by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+* Corrected the response description for a device identified from the access token: only the `device` object is omitted, the response is not limited to `applicationProfileId` by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+* Corrected the API descriptions to describe an ordered, possibly empty list of Edge Cloud Zones instead of the single closest zone by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/69
+
+### Removed
+
+* Removed `400 OUT_OF_RANGE` and `403 INVALID_TOKEN_CONTEXT` error codes, which are not applicable to this API by @maheshc01 in https://github.com/camaraproject/OptimalEdgeDiscovery/pull/60
+
+**Full Changelog**: https://github.com/camaraproject/OptimalEdgeDiscovery/compare/r2.1...r2.2
 
 # r2.1
 
