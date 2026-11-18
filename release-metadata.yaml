@@ -1,0 +1,13 @@
+repository:
+  repository_name: OptimalEdgeDiscovery
+  release_tag: r2.3
+  release_type: public-release
+  release_date: null
+  src_commit_sha: 3bfa16c317309d5877ef9f2e0fa5103c26d5eac0
+apis:
+- api_name: optimal-edge-discovery
+  api_version: 0.2.0
+  api_title: Optimal Edge Discovery
+dependencies:
+  commonalities_release: r4.4 (0.9.0)
+  identity_consent_management_release: r4.2 (0.5.0)
